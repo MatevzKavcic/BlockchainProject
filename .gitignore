@@ -1,14 +1,25 @@
 target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-# https://github.com/takari/maven-wrapper#usage-without-binary-jar
-.mvn/wrapper/maven-wrapper.jar
+/BlockChain/pom.xml.tag
+
+/BlockChain/pom.xml.releaseBackup
+/BlockChain/pom.xml.versionsBackup
+/BlockChain/pom.xml.next
+/BlockChain/release.properties
+/BlockChain/dependency-reduced-pom.xml
+/BlockChain/buildNumber.properties
+/BlockChain/.mvn/timing.properties
+/BlockChain/# https://github.com/takari/maven-wrapper#usage-without-binary-jar
+/BlockChain/.mvn/wrapper/maven-wrapper.jar
+
+/BlockChainNode/pom.xml.releaseBackup
+/BlockChainNode/pom.xml.versionsBackup
+/BlockChainNode/pom.xml.next
+/BlockChainNode/release.properties
+/BlockChainNode/dependency-reduced-pom.xml
+/BlockChainNode/buildNumber.properties
+/BlockChainNode/.mvn/timing.properties
+/BlockChainNode/# https://github.com/takari/maven-wrapper#usage-without-binary-jar
+/BlockChainNode/.mvn/wrapper/maven-wrapper.jar
 
 # Eclipse m2e generated files
 # Eclipse Core
