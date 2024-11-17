@@ -7,12 +7,14 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Blockchain-main" />
+        <module name="BlockChainNode" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="BlockChain" options="--add-opens java.base/java.lang=ALL-UNNAMED" />
+      <module name="BlockChainNode" options="--add-opens java.base/java.lang=ALL-UNNAMED" />
       <module name="Blockchain-main" options="--add-opens java.base/java.lang=ALL-UNNAMED" />
     </option>
   </component>

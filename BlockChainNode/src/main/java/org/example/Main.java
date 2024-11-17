@@ -11,47 +11,14 @@ public class Main {
     public static String myIp;
 
     public static int portNumber = 6001;
-    public static String hostName = "127.0.0.0";
+    public static String hostName = "127.0.0.1";
 
-    public static boolean firstNode = true;
+    public static boolean firstNode = false;
 
 
     public static void main(String[] args) {
-                if (!firstNode) {
-                    try (
-                            Socket echoSocket = new Socket(hostName, portNumber);        // 1st statement
-                            PrintWriter out =                                            // 2nd statement
-                                    new PrintWriter(echoSocket.getOutputStream(), true);
-                            BufferedReader in =                                          // 3rd statement
-                                    new BufferedReader(
-                                            new InputStreamReader(echoSocket.getInputStream()));
-                            BufferedReader stdIn =                                       // 4th statement
-                                    new BufferedReader(
-                                            new InputStreamReader(System.in))
-                    ) {
-                    } catch (UnknownHostException e) {
-                        throw new RuntimeException(e);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-                else {
-                    try (
-                            ServerSocket serverSocket = new ServerSocket(portNumber);
-                            Socket clientSocket = serverSocket.accept();
-                            PrintWriter out =
-                                    new PrintWriter(clientSocket.getOutputStream(), true);
-                            BufferedReader in = new BufferedReader(
-                                    new InputStreamReader(clientSocket.getInputStream()));
-                    ) {
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-
-
+        Peer peer = new Peer();
+        peer.run();
     }
 
 
