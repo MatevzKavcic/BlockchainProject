@@ -6,37 +6,36 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.BlockingQueue;
 
 public class Client extends Thread{
 
     String hostName;
     int portNumber;
+    private final BlockingQueue<String> messageQueue;
 
-    public Client(String hostName, int portNumber) {
+
+    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue) {
         this.hostName = hostName;
         this.portNumber = portNumber;
+        this.messageQueue = messageQueue;
     }
 
     @Override
     public void run() {
-        System.out.println("Starting as a client...");
-        try (Socket echoSocket = new Socket(hostName, portNumber);
-             PrintWriter out = new PrintWriter(echoSocket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(
-                     new InputStreamReader(echoSocket.getInputStream()));
-             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in))) {
-            System.out.println("Connected to the server at " + hostName + ":" + portNumber);
+        try (Socket socket = new Socket(hostName, portNumber);
+             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
-            // Example: Send user input to the server
+            System.out.println("Connected to server: " + hostName + ":" + portNumber);
+
             String userInput;
             while ((userInput = stdIn.readLine()) != null) {
-                out.println(userInput);
-                System.out.println("Server response: " + in.readLine());
+                out.println(userInput); // Send to the connected peer
+                messageQueue.put("From Client: " + userInput); // Add to message queue
             }
-        } catch (UnknownHostException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 }

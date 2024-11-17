@@ -18,8 +18,8 @@ public class Main {
 
     // this is the primary node or the root node so it will act as a server!
     public static void main(String[] args) {
-        Peer peer = new Peer();
-        peer.run();
+        Peer peer = new Peer(portNumber,hostName,firstNode);
+        peer.start();
 
     }
 

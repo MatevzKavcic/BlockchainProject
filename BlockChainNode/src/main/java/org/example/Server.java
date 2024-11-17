@@ -6,35 +6,44 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
 
 
 public class Server extends Thread{
     int portNumber;
-    public Server(int portNumber) {
+    private final BlockingQueue<String> messageQueue;
+    public Server(int portNumber, BlockingQueue<String> messageQueue) {
         this.portNumber = portNumber;
+        this.messageQueue = messageQueue;
     }
 
     @Override
     public void run() {
-        System.out.println("Starting as a server...");
         try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
-            System.out.println("Server is listening on port: " + portNumber);
-            try (Socket clientSocket = serverSocket.accept();
-                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                 BufferedReader in = new BufferedReader(
-                         new InputStreamReader(clientSocket.getInputStream()))) {
+            System.out.println("Server listening on port " + portNumber);
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
                 System.out.println("Client connected: " + clientSocket.getInetAddress());
 
-                // Example: Echo back received messages
-                String received;
-                while ((received = in.readLine()) != null) {
-                    System.out.println("Received: " + received);
-                    out.println("Echo: " + received);
-                }
+                // Start a thread to handle this client
+                new Thread(() -> handleClient(clientSocket)).start();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
+
+
+    private void handleClient(Socket clientSocket) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+            String message;
+            while ((message = in.readLine()) != null) {
+                System.out.println("Server received: " + message);
+                messageQueue.put(message); // Add message to queue
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
