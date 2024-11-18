@@ -7,14 +7,19 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Server extends Thread{
     int portNumber;
     private final BlockingQueue<String> messageQueue;
-    public Server(int portNumber, BlockingQueue<String> messageQueue) {
+    private ConcurrentHashMap<String, Socket> connectedPeers;
+
+
+    public Server(int portNumber, BlockingQueue<String> messageQueue,ConcurrentHashMap<String, Socket> connectedPeers) {
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
+        this.connectedPeers = connectedPeers;
     }
 
     @Override
@@ -23,10 +28,15 @@ public class Server extends Thread{
             System.out.println("Server listening on port " + portNumber);
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("Client connected: " + clientSocket.getInetAddress());
-
-                // Start a thread to handle this client
+                String clientKey = clientSocket.getInetAddress() + ":" + clientSocket.getPort(); // Unique key
+                connectedPeers.put(clientKey, clientSocket);
+                System.out.println("Client connected: " + clientKey);
+                // Start a thread to handle this client and handle messages from this client.
+                // if they send a message you put it in the messageQueue. it only listens.
                 new Thread(() -> handleClient(clientSocket)).start();
+
+                //messageQueue.put("10"); //this message will be for testing.
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -38,7 +48,7 @@ public class Server extends Thread{
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
             String message;
             while ((message = in.readLine()) != null) {
-                System.out.println("Server received: " + message);
+                System.out.println("Server recived message : " + message + " from socket "+ clientSocket.getPort());
                 messageQueue.put(message); // Add message to queue
             }
         } catch (Exception e) {

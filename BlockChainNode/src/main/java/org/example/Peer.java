@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -19,6 +20,13 @@ public class Peer extends Thread {
      int portNumber;
      String hostName;
     boolean firstNode ;
+
+    private ConcurrentHashMap<String, Socket> connectedPeers = new ConcurrentHashMap<>();
+
+    public ConcurrentHashMap<String, Socket> getConnectedPeers() {
+        return connectedPeers;
+    }
+
 
     public Peer(int portNumber, String hostName, boolean firstNode) {
         this.portNumber = portNumber;
@@ -36,19 +44,23 @@ public class Peer extends Thread {
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
 
-            MessagingService messagingServiceThread = new MessagingService(messageQueue);
+            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers);
             messagingServiceThread.start();
 
             if (firstNode) {
                 // Create a Server Thread !
-                Server server = new Server(portNumber,messageQueue);
+                Server server = new Server(portNumber,messageQueue,connectedPeers);
                 server.start();
             }
-            //this part of the code will BE true, because this node is Connecting to the Server
+            //this part of the code will never be true, because this node is the "Server" node
             else {
                 // Act as a client
-                Client client = new Client(hostName,portNumber,messageQueue);
+                Client client = new Client(hostName,portNumber,messageQueue,connectedPeers);
                 client.start();
+
+                Server server = new Server(portNumber,messageQueue,connectedPeers);
+                server.start();
+
 
                 System.out.println("testing print");
             }
