@@ -7,6 +7,8 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,17 +23,16 @@ public class Peer extends Thread {
      String hostName;
     boolean firstNode ;
 
-    private ConcurrentHashMap<String, Socket> connectedPeers = new ConcurrentHashMap<>();
+    KeyGenerator keyGenerator ;
 
-    public ConcurrentHashMap<String, Socket> getConnectedPeers() {
-        return connectedPeers;
-    }
+    private ConcurrentHashMap<String, Socket> connectedPeers = new ConcurrentHashMap<>();
 
 
     public Peer(int portNumber, String hostName, boolean firstNode) {
         this.portNumber = portNumber;
         this.hostName = hostName;
         this.firstNode = firstNode;
+        keyGenerator=new KeyGenerator();
     }
 
     @Override
@@ -49,18 +50,15 @@ public class Peer extends Thread {
 
             if (firstNode) {
                 // Create a Server Thread !
-                Server server = new Server(portNumber,messageQueue,connectedPeers);
+                Server server = new Server(portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
                 server.start();
+
             }
             //this part of the code will never be true, because this node is the "Server" node
             else {
                 // Act as a client
-                Client client = new Client(hostName,portNumber,messageQueue,connectedPeers);
+                Client client = new Client(hostName,portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
                 client.start();
-
-                Server server = new Server(portNumber,messageQueue,connectedPeers);
-                server.start();
-
 
                 System.out.println("testing print");
             }

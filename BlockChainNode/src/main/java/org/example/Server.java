@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,11 +17,16 @@ public class Server extends Thread{
     private final BlockingQueue<String> messageQueue;
     private ConcurrentHashMap<String, Socket> connectedPeers;
 
+    private PublicKey publicKey;
 
-    public Server(int portNumber, BlockingQueue<String> messageQueue,ConcurrentHashMap<String, Socket> connectedPeers) {
+    private PrivateKey privateKey;
+
+    public Server(int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<String, Socket> connectedPeers, PublicKey publicKey, PrivateKey privateKey) {
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
+        this.publicKey =publicKey;
+        this.privateKey = privateKey;
     }
 
     @Override
@@ -31,11 +38,13 @@ public class Server extends Thread{
                 String clientKey = clientSocket.getInetAddress() + ":" + clientSocket.getPort(); // Unique key
                 connectedPeers.put(clientKey, clientSocket);
                 System.out.println("Client connected: " + clientKey);
+
+                System.out.println("This is my public key" + publicKey);
+                System.out.println("this is my private key" + privateKey);
                 // Start a thread to handle this client and handle messages from this client.
                 // if they send a message you put it in the messageQueue. it only listens.
                 new Thread(() -> handleClient(clientSocket)).start();
 
-                //messageQueue.put("10"); //this message will be for testing.
 
             }
         } catch (Exception e) {
