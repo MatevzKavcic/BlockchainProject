@@ -2,6 +2,7 @@ package org.example;
 
 
 import java.security.*;
+import java.util.Base64;
 
 public class KeyGenerator {
 
@@ -26,6 +27,10 @@ public class KeyGenerator {
     // Getters for keys
     public PublicKey getPublicKey() {
         return publicKey;
+    }
+
+    public String publicKeyToString(PublicKey publicKey) {
+        return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
 
     public PrivateKey getPrivateKey() {

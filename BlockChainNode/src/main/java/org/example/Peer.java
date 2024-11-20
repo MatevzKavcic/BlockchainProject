@@ -25,7 +25,7 @@ public class Peer extends Thread {
 
     KeyGenerator keyGenerator ;
 
-    private ConcurrentHashMap<String, Socket> connectedPeers = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<PublicKey, Socket> connectedPeers = new ConcurrentHashMap<>();
 
 
     public Peer(int portNumber, String hostName, boolean firstNode) {

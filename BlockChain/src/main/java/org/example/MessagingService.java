@@ -1,14 +1,15 @@
 package org.example;
 
 import java.net.Socket;
+import java.security.PublicKey;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MessagingService extends Thread {
     private final BlockingQueue<String> messageQueue;
-    private ConcurrentHashMap<String, Socket> connectedPeers;
+    private ConcurrentHashMap<PublicKey, Socket> connectedPeers;
 
-    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<String, Socket> connectedPeers) {
+    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, Socket> connectedPeers) {
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
     }
