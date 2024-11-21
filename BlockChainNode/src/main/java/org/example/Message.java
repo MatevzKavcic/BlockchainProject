@@ -9,7 +9,7 @@ public class Message implements Serializable {
 
     private String publicKey;
 
-    public Message(MessageType header, String body,String publicKey) {
+    public Message(MessageType header, String body, String publicKey) {
         this.header = header;
         this.body = body;
         this.publicKey = publicKey;
@@ -31,10 +31,10 @@ public class Message implements Serializable {
         this.body = body;
     }
 
-
     public String getPublicKey() {
         return publicKey;
     }
+
     @Override
     public String toString() {
         return "Message{" +

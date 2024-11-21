@@ -3,7 +3,6 @@ package org.example;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -20,13 +19,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Server extends Thread{
     int portNumber;
     private final BlockingQueue<String> messageQueue;
-    private ConcurrentHashMap<PublicKey, Socket> connectedPeers;
+    private ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers;
+
 
     private PublicKey publicKey;
 
     private PrivateKey privateKey;
 
-    public Server(int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, Socket> connectedPeers, PublicKey publicKey, PrivateKey privateKey) {
+    public Server(int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey) {
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
@@ -44,17 +44,17 @@ public class Server extends Thread{
                 // handshakeProtocol Initiated by server.
                 handShakeProtocol(clientSocket);
 
-                // Send handshake message
-
-
-                // Start a thread to handle further communication with this client
-                new Thread(() -> handleClient(clientSocket)).start();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+
+    // this method takes in the socket that was currently created.
+    // what it does is a bit more complicated. It initiates the handshake protocol  and exchanges the public keys with the client and then creates two threads.
+    //one thread will only listen to the socket and put messages that it recieves to a message queue
+    // one thrad will be created for messaging. it will have a method send that will send a something to that socket output. and i will have an array of those sockets that will handle the sockets? i guess ?
     private void handShakeProtocol(Socket clientSocket) throws Exception {
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -75,23 +75,22 @@ public class Server extends Thread{
         PublicKey clientPublicKey = stringToPublicKey(responseMessage.getPublicKey());
         System.out.println("Client's public key: " + clientPublicKey);
 
+
+        ListenToMeThred listenThread = new ListenToMeThred(clientSocket, in, messageQueue);
+        new Thread(listenThread).start(); // Run the listening thread
+
+        WriteMeThread writeMeThread = new WriteMeThread(out);
+        new Thread(writeMeThread).start(); // Run the listening thread
+
+        PeerInfo peerInfo = new PeerInfo(clientSocket,writeMeThread);
+
         // Store the client's information in connectedPeers
-        connectedPeers.put(clientPublicKey, clientSocket);
+        //it stores the publicKey and the peers socket and the writemeThread;
+        connectedPeers.put(clientPublicKey, peerInfo);
+
     }
 
-
-    private void handleClient(Socket clientSocket) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-            String message;
-            while ((message = in.readLine()) != null) {
-                System.out.println("Server recived message : " + message + " from socket "+ clientSocket.getPort());
-                messageQueue.put(message); // Add message to queue
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+//peer -> server,client -> writeMeThread,ListenToMeThread (Messaging service bo rabu met sepravi )
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }

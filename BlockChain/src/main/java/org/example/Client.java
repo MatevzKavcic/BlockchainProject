@@ -3,7 +3,6 @@ package org.example;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -14,21 +13,20 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Handler;
 
 public class Client extends Thread{
 
     String hostName;
     int portNumber;
     private final BlockingQueue<String> messageQueue;
-    private ConcurrentHashMap<PublicKey, Socket> connectedPeers;
+    private ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers;
     private PublicKey publicKey;
 
     private PrivateKey privateKey;
 
 
 
-    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, Socket> connectedPeers, PublicKey publicKey, PrivateKey privateKey) {
+    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey) {
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
@@ -42,17 +40,25 @@ public class Client extends Thread{
         try {
             Socket socket = new Socket(hostName, 6000);
 
+            //thiss method handles everything... it connects the two peers, makes the handshake, gets the information from the other peer
+            // it creates two threads, one that only listens to the socket output and rads it and one that will handle writting to the other sockets. description is above the method
+
+
             handleHandshakeFromServer(socket);
 
 
-            // Spawn a thread to handle incoming messages from the server
-            // It only listens to the server messages and puts them in a queue
-            new Thread(() -> handleServerMessages(socket)).start();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+
+
+    // this method takes in the socket that was currently created.
+    // what it does is a bit more complicated. It initiates the handshake protocol  and exchanges the public keys with the client and then creates two threads.
+    //one thread will only listen to the socket and put messages that it recieves to a message queue
+    // one thrad will be created for messaging. it will have a method send that will send a something to that socket output. and i will have an array of those sockets that will handle the sockets? i guess ?
 
     private void handleHandshakeFromServer(Socket socket) throws Exception {
 
@@ -73,8 +79,6 @@ public class Client extends Thread{
         PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
         System.out.println("Server's public key: " + serverPublicKey);
 
-        //you succesfuly got the server key. save in the connected peers sockets
-        connectedPeers.put(serverPublicKey, socket);
 
         //send a new message to the server to let him know your public key;
 
@@ -85,6 +89,17 @@ public class Client extends Thread{
         out.println(jsonResponse);
 
 
+        ListenToMeThred listenThread = new ListenToMeThred(socket, in, messageQueue);
+        new Thread(listenThread).start(); // Run the listening thread
+
+        WriteMeThread writeMeThread = new WriteMeThread(out);
+        new Thread(writeMeThread).start(); // Run the listening thread
+
+        PeerInfo peerInfo = new PeerInfo(socket,writeMeThread);
+
+        // Store the client's information in connectedPeers
+        //it stores the publicKey and the peers socket and the writemeThread;
+        connectedPeers.put(serverPublicKey, peerInfo);
 
         System.out.println("This is my public key: " + publicKey);
 
@@ -92,17 +107,6 @@ public class Client extends Thread{
     }
 
     // Method to handle messages from the server
-    private void handleServerMessages(Socket socket) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            String message;
-            while ((message = in.readLine()) != null) {
-                System.out.println("Server says: " + message);
-                messageQueue.put(message); // Add server message to queue
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     public PublicKey stringToPublicKey(String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);

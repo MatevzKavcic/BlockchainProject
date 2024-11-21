@@ -7,9 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MessagingService extends Thread {
     private final BlockingQueue<String> messageQueue;
-    private ConcurrentHashMap<PublicKey, Socket> connectedPeers;
+    private ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers;
 
-    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, Socket> connectedPeers) {
+    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers) {
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
     }

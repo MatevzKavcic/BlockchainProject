@@ -11,7 +11,7 @@ import java.util.Enumeration;
 
 public class Main {
 
-    public static int portNumber = 6001;
+    public static int portNumber = 6000;
     public static String hostName = "127.0.0.1";
     public static boolean firstNode = false;
 
