@@ -4,4 +4,7 @@ public enum MessageType {
     HANDSHAKE,
     HANDSHAKEKEYRETURN,
 
+    NEWUSERinNETWORK,
+
+
 }

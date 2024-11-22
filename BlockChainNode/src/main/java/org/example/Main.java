@@ -8,10 +8,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.*;
 import java.util.Enumeration;
+import java.util.Random;
 
 public class Main {
 
-    public static int portNumber = 6000;
+    Random random = new Random(6000);
+
+    public static int portNumber =  6000 + (int)(Math.random() * 2001);
     public static String hostName = "127.0.0.1";
     public static boolean firstNode = false;
 

@@ -1,6 +1,8 @@
 package org.example;
 
 import com.google.gson.Gson;
+import util.LogLevel;
+import util.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -58,25 +60,25 @@ public class Client extends Thread{
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-        System.out.println("Connected to server: " + hostName + ":" + portNumber);
+        Logger.log("Connected to server: " + hostName + ":" + portNumber, LogLevel.Success);
 
         // read the first message from the server. it sohuld be the handshakeMessage
 
         String jsonMessage = in.readLine(); // Read the JSON message
-        System.out.println("Received handshake message: " + jsonMessage);
+        Logger.log("Received handshake message: " + jsonMessage,LogLevel.Success);
 
 
         Gson gson = new Gson();
         Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
         PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
-        System.out.println("Server's public key: " + serverPublicKey);
+        Logger.log("Server's public key: " + serverPublicKey, LogLevel.Success);
 
 
         //send a new message to the server to let him know your public key;
 
         Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURN, "", publicKeyToString(publicKey));
         String jsonResponse = gson.toJson(responseMessage);
-        System.out.println("Sending response handshake to server: " + jsonResponse);
+        Logger.log("Sending response handshake to server: " + jsonResponse,LogLevel.Status);
 
         out.println(jsonResponse);
 
@@ -93,7 +95,7 @@ public class Client extends Thread{
         //it stores the publicKey and the peers socket and the writemeThread;
         connectedPeers.put(serverPublicKey, peerInfo);
 
-        System.out.println("This is my public key: " + publicKey);
+        Logger.log("This is my public key: " + publicKey, LogLevel.Info);
 
 
     }
@@ -101,6 +103,7 @@ public class Client extends Thread{
     // Method to handle messages from the server
 
 
+    //methods that help decode messages and keys and stuff
     public PublicKey stringToPublicKey(String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);

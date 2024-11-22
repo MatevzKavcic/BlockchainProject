@@ -1,6 +1,8 @@
 package org.example;
 
 import com.google.gson.Gson;
+import util.LogLevel;
+import util.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -44,6 +46,11 @@ public class Server extends Thread{
                 // handshakeProtocol Initiated by server.
                 handShakeProtocol(clientSocket);
 
+                // now that you have shook hands with the other peer
+                //send information that a new peer joined the network and send then the port of that peer
+
+
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -63,17 +70,17 @@ public class Server extends Thread{
         Gson gson = new Gson();
         String jsonMessage = gson.toJson(handshakeMessage);
 
-        System.out.println("Sending handshake message to client: " + jsonMessage);
+        Logger.log("Sending handshake message to client: ",LogLevel.Info);
         out.println(jsonMessage); // Send handshake to client
 
         // Read the response handshake message
         String jsonResponseMessage = in.readLine(); // Wait for client's response
-        System.out.println("Received response handshake message: " + jsonResponseMessage);
+        Logger.log("Received response handshake message: " + jsonResponseMessage,LogLevel.Success);
 
         // Deserialize the response and process the client's public key
         Message responseMessage = gson.fromJson(jsonResponseMessage, Message.class);
         PublicKey clientPublicKey = stringToPublicKey(responseMessage.getPublicKey());
-        System.out.println("Client's public key: " + clientPublicKey);
+        Logger.log("Client's public key: " + clientPublicKey , LogLevel.Info);
 
 
         ListenToMeThred listenThread = new ListenToMeThred(clientSocket, in, messageQueue);
@@ -87,6 +94,15 @@ public class Server extends Thread{
         // Store the client's information in connectedPeers
         //it stores the publicKey and the peers socket and the writemeThread;
         connectedPeers.put(clientPublicKey, peerInfo);
+
+        Logger.log("new connection :  ");
+        Logger.log("----> (kao sem se povezes) Local IP :  " + clientSocket.getLocalAddress());
+        Logger.log("----> (my port where i'm open) Local PORT :  " + clientSocket.getLocalPort());
+        Logger.log("----> IP :  " + clientSocket.getInetAddress());
+        Logger.log("----> (odprt port ku poslusa) PORT :  " + clientSocket.getPort());
+        Logger.log("----------------------------");
+
+
 
     }
 

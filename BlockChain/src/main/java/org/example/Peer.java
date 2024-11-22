@@ -1,5 +1,8 @@
 package org.example;
 
+import util.LogLevel;
+import util.Logger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -41,7 +44,7 @@ public class Peer extends Thread {
             // Get and print the local IP address
             InetAddress localHost = InetAddress.getLocalHost();
             String myIp = localHost.getHostAddress();
-            System.out.println("My IP: " + myIp);
+            Logger.log("My IP: " + myIp, LogLevel.Info);
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
 
@@ -56,11 +59,14 @@ public class Peer extends Thread {
             }
             //this part of the code will never be true, because this node is the "Server" node
             else {
-                // Act as a client
+                // Create a server Thread that will listen
+                Server server= new Server(portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
+                server.start();
+
+                // and then make a thread that will listen to
                 Client client = new Client(hostName,portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
                 client.start();
 
-                System.out.println("testing print");
             }
         } catch (IOException e) {
             e.printStackTrace();
