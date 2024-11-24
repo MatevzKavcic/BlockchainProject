@@ -60,25 +60,25 @@ public class Client extends Thread{
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-        Logger.log("Connected to server: " + hostName + ":" + portNumber, LogLevel.Success);
+        System.out.println("Connected to server: " + hostName + ":" + portNumber);
 
         // read the first message from the server. it sohuld be the handshakeMessage
 
         String jsonMessage = in.readLine(); // Read the JSON message
-        Logger.log("Received handshake message: " + jsonMessage,LogLevel.Success);
+        System.out.println("Received handshake message: " + jsonMessage);
 
 
         Gson gson = new Gson();
         Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
         PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
-        Logger.log("Server's public key: " + serverPublicKey, LogLevel.Success);
+        System.out.println("Server's public key: " + serverPublicKey);
 
 
-        //send a new message to the server to let him know your public key;
+        //send a new message to the server to let him know your public key and your port number;
 
-        Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURN, "", publicKeyToString(publicKey));
+        Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURN, ""+portNumber, publicKeyToString(publicKey));
         String jsonResponse = gson.toJson(responseMessage);
-        Logger.log("Sending response handshake to server: " + jsonResponse,LogLevel.Status);
+        System.out.println("Sending response handshake to server: " + jsonResponse);
 
         out.println(jsonResponse);
 
@@ -89,14 +89,22 @@ public class Client extends Thread{
         WriteMeThread writeMeThread = new WriteMeThread(out);
         new Thread(writeMeThread).start(); // Run the listening thread
 
-        PeerInfo peerInfo = new PeerInfo(socket,writeMeThread);
+        // ta port number je lahko zavajujoč in narobe... tle moras dat od serverja number na katerega si se povezal.
+        PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,portNumber);
 
         // Store the client's information in connectedPeers
         //it stores the publicKey and the peers socket and the writemeThread;
         connectedPeers.put(serverPublicKey, peerInfo);
 
-        Logger.log("This is my public key: " + publicKey, LogLevel.Info);
+        System.out.println("This is my public key: " + publicKey);
 
+
+        Logger.log("new connection :  ");
+        Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
+        Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
+        Logger.log("----> IP :  " + socket.getInetAddress());
+        Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
+        Logger.log("----------------------------");
 
     }
 

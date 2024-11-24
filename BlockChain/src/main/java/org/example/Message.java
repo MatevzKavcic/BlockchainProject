@@ -9,6 +9,10 @@ public class Message implements Serializable {
 
     private String publicKey;
 
+    private int serverPort;
+
+
+    // to bo moj prvi message ki se bo poslau po networku da ves public key njegov in njegov server port.
     public Message(MessageType header, String body, String publicKey) {
         this.header = header;
         this.body = body;

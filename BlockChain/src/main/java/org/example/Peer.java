@@ -22,7 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Peer extends Thread {
 
 
-     int portNumber;
+     int portNumber; // portnumber je numbeer serverja kje se bo odprl
      String hostName;
     boolean firstNode ;
 

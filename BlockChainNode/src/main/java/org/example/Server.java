@@ -34,6 +34,7 @@ public class Server extends Thread{
         this.connectedPeers = connectedPeers;
         this.publicKey =publicKey;
         this.privateKey = privateKey;
+
     }
 
     @Override
@@ -73,7 +74,7 @@ public class Server extends Thread{
         Logger.log("Sending handshake message to client: ",LogLevel.Info);
         out.println(jsonMessage); // Send handshake to client
 
-        // Read the response handshake message
+        // Read the response handshake message... public key and in the body there is a port number of the server port.
         String jsonResponseMessage = in.readLine(); // Wait for client's response
         Logger.log("Received response handshake message: " + jsonResponseMessage,LogLevel.Success);
 
@@ -81,7 +82,7 @@ public class Server extends Thread{
         Message responseMessage = gson.fromJson(jsonResponseMessage, Message.class);
         PublicKey clientPublicKey = stringToPublicKey(responseMessage.getPublicKey());
         Logger.log("Client's public key: " + clientPublicKey , LogLevel.Info);
-
+        int peersPortNum = Integer.parseInt(responseMessage.getBody());
 
         ListenToMeThred listenThread = new ListenToMeThred(clientSocket, in, messageQueue);
         new Thread(listenThread).start(); // Run the listening thread
@@ -89,10 +90,11 @@ public class Server extends Thread{
         WriteMeThread writeMeThread = new WriteMeThread(out);
         new Thread(writeMeThread).start(); // Run the listening thread
 
-        PeerInfo peerInfo = new PeerInfo(clientSocket,writeMeThread);
+        PeerInfo peerInfo = new PeerInfo(clientSocket,writeMeThread,peersPortNum);
 
         // Store the client's information in connectedPeers
-        //it stores the publicKey and the peers socket and the writemeThread;
+        //it stores the publicKey and the peers socket and the peers server port in the connected peers.;
+
         connectedPeers.put(clientPublicKey, peerInfo);
 
         Logger.log("new connection :  ");

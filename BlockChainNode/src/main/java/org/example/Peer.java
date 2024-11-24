@@ -1,13 +1,10 @@
 package org.example;
 
-import java.io.BufferedReader;
+import util.LogLevel;
+import util.Logger;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Peer extends Thread {
 
 
- int portNumber;
+     int portNumber; // portnumber je numbeer serverja kje se bo odprl
      String hostName;
     boolean firstNode ;
 
@@ -41,7 +38,7 @@ public class Peer extends Thread {
             // Get and print the local IP address
             InetAddress localHost = InetAddress.getLocalHost();
             String myIp = localHost.getHostAddress();
-            System.out.println("My IP: " + myIp);
+            Logger.log("My IP: " + myIp, LogLevel.Info);
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
 
