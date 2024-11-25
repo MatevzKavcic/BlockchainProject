@@ -39,27 +39,19 @@ public class Client extends Thread{
     @Override
     public void run() {
         try {
-            Socket socket = new Socket(hostName, 6000);
+            Socket socket = new Socket(hostName, portNumber);
 
-            //thiss method handles everything... it connects the two peers, makes the handshake, gets the information from the other peer
-            // it creates two threads, one that only listens to the socket output and rads it and one that will handle writting to the other sockets. description is above the method
-
+            // this method takes in the socket that was currently created.
+            // what it does is a bit more complicated. It initiates the handshake protocol  and exchanges the public keys with the client and then creates two threads.
+            //one thread will only listen to the socket and put messages that it recieves to a message queue
+            // one thrad will be created for messaging. it will have a method send that will send a something to that socket output. and i will have an array of those sockets that will handle the sockets? i guess ?
 
             handleHandshakeFromServer(socket);
-
-
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
-
-    // this method takes in the socket that was currently created.
-    // what it does is a bit more complicated. It initiates the handshake protocol  and exchanges the public keys with the client and then creates two threads.
-    //one thread will only listen to the socket and put messages that it recieves to a message queue
-    // one thrad will be created for messaging. it will have a method send that will send a something to that socket output. and i will have an array of those sockets that will handle the sockets? i guess ?
 
     private void handleHandshakeFromServer(Socket socket) throws Exception {
 
@@ -96,7 +88,6 @@ public class Client extends Thread{
         WriteMeThread writeMeThread = new WriteMeThread(out);
         new Thread(writeMeThread).start(); // Run the listening thread
 
-        // ta port number je lahko zavajujoč in narobe... tle moras dat od serverja number na katerega si se povezal.
         PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,portNumber);
 
         // Store the client's information in connectedPeers
@@ -113,11 +104,12 @@ public class Client extends Thread{
         Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
         Logger.log("----------------------------");
 
-
     }
 
     // Method to handle messages from the server
 
+
+    //methods that help decode messages and keys and stuff
     public PublicKey stringToPublicKey(String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);

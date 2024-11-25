@@ -40,7 +40,7 @@ public class Client extends Thread{
     @Override
     public void run() {
         try {
-            Socket socket = new Socket(hostName, 6000);
+            Socket socket = new Socket(hostName, portNumber);
 
             // this method takes in the socket that was currently created.
             // what it does is a bit more complicated. It initiates the handshake protocol  and exchanges the public keys with the client and then creates two threads.
@@ -89,7 +89,6 @@ public class Client extends Thread{
         WriteMeThread writeMeThread = new WriteMeThread(out);
         new Thread(writeMeThread).start(); // Run the listening thread
 
-        // ta port number je lahko zavajujoč in narobe... tle moras dat od serverja number na katerega si se povezal.
         PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,portNumber);
 
         // Store the client's information in connectedPeers
