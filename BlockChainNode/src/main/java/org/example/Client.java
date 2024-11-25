@@ -25,7 +25,7 @@ public class Client extends Thread{
 
     private PrivateKey privateKey;
 
-    private boolean isNew;
+    private boolean isNew= false;
 
 
 
@@ -37,6 +37,7 @@ public class Client extends Thread{
         this.publicKey = publicKey;
         this.privateKey = privateKey;
     }
+
     public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, boolean isNew) {
         this.hostName = hostName;
         this.portNumber = portNumber;
@@ -50,7 +51,14 @@ public class Client extends Thread{
     @Override
     public void run() {
         try {
-            Socket socket = new Socket(hostName, 6000);
+            Socket socket;
+
+            if (isNew){
+                 socket = new Socket(hostName, portNumber);
+            }
+            else {
+                 socket = new Socket(hostName, 6000);
+            }
 
             //thiss method handles everything... it connects the two peers, makes the handshake, gets the information from the other peer
             // it creates two threads, one that only listens to the socket output and rads it and one that will handle writting to the other sockets. description is above the method
@@ -117,7 +125,20 @@ public class Client extends Thread{
         new Thread(writeMeThread).start(); // Run the listening thread
 
         // ta port number je lahko zavajujoč in narobe... tle moras dat od serverja number na katerega si se povezal.
-        PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,portNumber);
+
+        PeerInfo peerInfo;
+        int i = 0;
+       if (i == 0) {
+            peerInfo = new PeerInfo(socket,writeMeThread,6000);
+       }
+       else {
+            peerInfo = new PeerInfo(socket,writeMeThread,portNumber);
+
+       }
+
+
+
+
 
         // Store the client's information in connectedPeers
         //it stores the publicKey and the peers socket and the writemeThread;
