@@ -18,6 +18,11 @@ public class Message implements Serializable {
         this.publicKey = publicKey;
     }
 
+    public Message(MessageType header, int serverPort) {
+        this.header= header;
+        this.serverPort=serverPort;
+    }
+
     public MessageType getHeader() {
         return header;
     }
@@ -44,5 +49,13 @@ public class Message implements Serializable {
                 "header='" + header + '\'' +
                 ", body='" + body + '\'' +
                 '}';
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
+    public void setServerPort(int serverPort) {
+        this.serverPort = serverPort;
     }
 }

@@ -25,6 +25,8 @@ public class Client extends Thread{
 
     private PrivateKey privateKey;
 
+    private boolean isNew;
+
 
 
     public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey) {
@@ -35,11 +37,20 @@ public class Client extends Thread{
         this.publicKey = publicKey;
         this.privateKey = privateKey;
     }
+    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, boolean isNew) {
+        this.hostName = hostName;
+        this.portNumber = portNumber;
+        this.messageQueue = messageQueue;
+        this.connectedPeers = connectedPeers;
+        this.publicKey = publicKey;
+        this.privateKey = privateKey;
+        this.isNew = isNew;
+    }
 
     @Override
     public void run() {
         try {
-            Socket socket = new Socket(hostName, 6000);
+            Socket socket = new Socket(hostName, portNumber);
 
             //thiss method handles everything... it connects the two peers, makes the handshake, gets the information from the other peer
             // it creates two threads, one that only listens to the socket output and rads it and one that will handle writting to the other sockets. description is above the method
@@ -82,15 +93,24 @@ public class Client extends Thread{
 
 
         //send a new message to the server to let him know your public key and your port number;
+        if (isNew){
+            Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURNKNOWN, ""+portNumber, publicKeyToString(publicKey));
+            String jsonResponse = gson.toJson(responseMessage);
+            System.out.println("Sending response handshake to server: " + jsonResponse);
+            out.println(jsonResponse);
 
-        Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURN, ""+portNumber, publicKeyToString(publicKey));
-        String jsonResponse = gson.toJson(responseMessage);
-        System.out.println("Sending response handshake to server: " + jsonResponse);
 
-        out.println(jsonResponse);
+        }else {
+            Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURN, ""+portNumber, publicKeyToString(publicKey));
+            String jsonResponse = gson.toJson(responseMessage);
+            System.out.println("Sending response handshake to server: " + jsonResponse);
+            out.println(jsonResponse);
+
+        }
 
 
-        ListenToMeThred listenThread = new ListenToMeThred(socket, in, messageQueue);
+
+        ListenToMeThread listenThread = new ListenToMeThread(socket, in, messageQueue);
         new Thread(listenThread).start(); // Run the listening thread
 
         WriteMeThread writeMeThread = new WriteMeThread(out);

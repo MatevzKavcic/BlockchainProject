@@ -11,8 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
-
-
 public class Peer extends Thread {
 
 
@@ -42,7 +40,7 @@ public class Peer extends Thread {
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
 
-            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers);
+            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),hostName);
             messagingServiceThread.start();
 
             if (firstNode) {

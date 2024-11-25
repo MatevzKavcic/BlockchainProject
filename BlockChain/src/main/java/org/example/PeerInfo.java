@@ -6,6 +6,7 @@ public class PeerInfo {
     private Socket socket;
     private Thread thread; // Reference to the thread
 
+
     private int serverPort;
 
     public PeerInfo(Socket socket, Thread thread, int serverPort) {
@@ -29,4 +30,12 @@ public class PeerInfo {
     public void setThread(Thread thread) {
         this.thread = thread;
     }
+    public void setServerPort(int serverPort) {
+        this.serverPort = serverPort;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
 }
