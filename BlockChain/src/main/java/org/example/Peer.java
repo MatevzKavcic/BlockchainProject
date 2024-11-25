@@ -48,7 +48,7 @@ public class Peer extends Thread {
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
 
-            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),hostName);
+            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers);
             messagingServiceThread.start();
 
             if (firstNode) {

@@ -1,8 +1,6 @@
 package org.example;
 
 import java.io.PrintWriter;
-import java.security.PublicKey;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class WriteMeThread extends Thread{
 
@@ -19,8 +17,7 @@ public class WriteMeThread extends Thread{
 
     }
 
-    public void newPeer(String message){
-        out.println(message);
-        out.flush();
+    public void  test(){
+        System.out.println("thecuk");
     }
 }

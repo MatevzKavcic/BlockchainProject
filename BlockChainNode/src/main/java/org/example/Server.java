@@ -84,23 +84,13 @@ public class Server extends Thread{
         Logger.log("Client's public key: " + clientPublicKey , LogLevel.Info);
         int peersPortNum = Integer.parseInt(responseMessage.getBody());
 
-        ListenToMeThread listenThread = new ListenToMeThread(clientSocket, in, messageQueue);
+        ListenToMeThred listenThread = new ListenToMeThred(clientSocket, in, messageQueue);
         new Thread(listenThread).start(); // Run the listening thread
 
         WriteMeThread writeMeThread = new WriteMeThread(out);
         new Thread(writeMeThread).start(); // Run the listening thread
 
         PeerInfo peerInfo = new PeerInfo(clientSocket,writeMeThread,peersPortNum);
-
-
-        // TO IMPLEMENT:
-        // ko pride na server client ga moramo dat v omrezje  in naredimo protokol da bo poslau usem da se bodo povezali se oni na njega.
-        //samo v primeru ko se ne povezejo name ze znani v omrezju. ko se bodo imeli header drugacen.
-        //TO IMPLEMENT kar pise gorej.
-        if (responseMessage.getHeader()==MessageType.HANDSHAKEKEYRETURNKNOWN){
-            SendThisPeerInfoToOthers(peerInfo,connectedPeers,gson);
-        }
-
 
         // Store the client's information in connectedPeers
         //it stores the publicKey and the peers socket and the peers server port in the connected peers.;
@@ -115,27 +105,10 @@ public class Server extends Thread{
         Logger.log("----------------------------");
 
 
-        //TO IMPLEMENT:
-        // ko pride bo potreboval tudi blockchain od soseda in bo dau request.
-
 
     }
 
-    private void SendThisPeerInfoToOthers(PeerInfo peerInformation, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers,Gson gson) {
-        Message newPeerIncoming = new Message(MessageType.NEWPEER,peerInformation.getServerPort());
-        String jsonMessagge= gson.toJson(newPeerIncoming);
-        connectedPeers.forEach((publicKey, peerInfo) -> {
-            try {
-                WriteMeThread thread = (WriteMeThread) peerInfo.getThread();
-                thread.newPeer(jsonMessagge);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-    }
-
-    //peer -> server,client -> writeMeThread,ListenToMeThread (Messaging service bo rabu met sepravi )
+//peer -> server,client -> writeMeThread,ListenToMeThread (Messaging service bo rabu met sepravi )
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }

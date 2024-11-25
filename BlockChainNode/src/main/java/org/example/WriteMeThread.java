@@ -17,8 +17,7 @@ public class WriteMeThread extends Thread{
 
     }
 
-    public void newPeer(String message){
-        out.println(message);
-        out.flush();
+    public void  test(){
+        System.out.println("thecuk");
     }
 }
