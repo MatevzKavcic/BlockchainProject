@@ -44,7 +44,6 @@ public class MessagingService extends Thread {
 
                 Message messageObject = gson.fromJson(message,Message.class);
                 int serverPort = messageObject.getServerPort();
-                Logger.log(serverPort + " this is the server port i have to connect to" , LogLevel.Warn);
 
                 switch (messageObject.getHeader()) {
                     case HANDSHAKE -> {
@@ -55,13 +54,13 @@ public class MessagingService extends Thread {
                     case NEWPEER -> {
                         //When I get this message i want to connect to this peer on this message port.
                         //so i create a socket that will connect to it.
-                        Logger.log("createing a new CLient that will connect to the server port of the Neew Peer" , LogLevel.Warn);
                         Client client= new Client(hostName,serverPort,messageQueue,connectedPeers,publicKey, privateKey,true); // posljes se true variable da ves da bos pol poslau difrent message
                         client.start();
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + messageObject.getHeader());
                 }
 
+                System.out.println(message);
 
 
 

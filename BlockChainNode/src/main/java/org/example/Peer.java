@@ -55,7 +55,7 @@ public class Peer extends Thread {
                 Server server= new Server(portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
                 server.start();
 
-                // and then make Client thread that will connect to a server.. the first node
+                // and then make a thread that will listen to
                 Client client = new Client(hostName,portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
                 client.start();
 

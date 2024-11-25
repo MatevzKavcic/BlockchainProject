@@ -99,23 +99,21 @@ public class Server extends Thread{
         //TO IMPLEMENT kar pise gorej.
         if (responseMessage.getHeader()!=MessageType.HANDSHAKEKEYRETURNKNOWN){
             SendThisPeerInfoToOthers(peerInfo,connectedPeers,gson);
-            connectedPeers.put(clientPublicKey, peerInfo);
         }
-        else {
-            connectedPeers.put(clientPublicKey, peerInfo);
 
-        }
+
 
         // Store the client's information in connectedPeers
         //it stores the publicKey and the peers socket and the peers server port in the connected peers.;
 
+        connectedPeers.put(clientPublicKey, peerInfo);
 
-        //Logger.log("new connection :  ");
-        //Logger.log("----> (kao sem se povezes) Local IP :  " + clientSocket.getLocalAddress());
-        //Logger.log("----> (my port where i'm open) Local PORT :  " + clientSocket.getLocalPort());
-        //Logger.log("----> IP :  " + clientSocket.getInetAddress());
-        //Logger.log("----> (odprt port ku poslusa) PORT :  " + clientSocket.getPort());
-        //Logger.log("----------------------------");
+        Logger.log("new connection :  ");
+        Logger.log("----> (kao sem se povezes) Local IP :  " + clientSocket.getLocalAddress());
+        Logger.log("----> (my port where i'm open) Local PORT :  " + clientSocket.getLocalPort());
+        Logger.log("----> IP :  " + clientSocket.getInetAddress());
+        Logger.log("----> (odprt port ku poslusa) PORT :  " + clientSocket.getPort());
+        Logger.log("----------------------------");
 
 
         //TO IMPLEMENT:
