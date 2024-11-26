@@ -44,7 +44,7 @@ public class Peer extends Thread {
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
 
-            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers);
+            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
             messagingServiceThread.start();
 
             if (firstNode) {
@@ -62,6 +62,9 @@ public class Peer extends Thread {
                 // and then make a thread that will listen to
                 Client client = new Client(hostName,portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),portNumberOfFirstConnect);
                 client.start();
+
+
+
 
             }
         } catch (IOException e) {

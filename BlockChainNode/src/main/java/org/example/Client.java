@@ -26,7 +26,9 @@ public class Client extends Thread{
 
     private PrivateKey privateKey;
 
- private int connectToPort;
+    private int connectToPort;
+
+    boolean isSpecial = false;
 
 
 
@@ -39,6 +41,16 @@ public class Client extends Thread{
         this.privateKey = privateKey;
         this.connectToPort = connectToPort;
     }
+    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,boolean isSpecial) {
+        this.hostName = hostName;
+        this.portNumber = portNumber;
+        this.messageQueue = messageQueue;
+        this.connectedPeers = connectedPeers;
+        this.publicKey = publicKey;
+        this.privateKey = privateKey;
+        this.connectToPort = connectToPort;
+        this.isSpecial= isSpecial;
+    }
 
     @Override
     public void run() {
@@ -49,6 +61,10 @@ public class Client extends Thread{
             // what it does is a bit more complicated. It initiates the handshake protocol  and exchanges the public keys with the client and then creates two threads.
             //one thread will only listen to the socket and put messages that it recieves to a message queue
             // one thrad will be created for messaging. it will have a method send that will send a something to that socket output. and i will have an array of those sockets that will handle the sockets? i guess ?
+
+            if (isSpecial){
+                handleHandshakeFromServerIfSpecial(socket);
+            }
 
             handleHandshakeFromServer(socket);
 
@@ -63,25 +79,24 @@ public class Client extends Thread{
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-        System.out.println("Connected to server: " + hostName + ":" + connectToPort);
+        //System.out.println("Connected to server: " + hostName + ":" + connectToPort);
 
         // read the first message from the server. it sohuld be the handshakeMessage
 
         String jsonMessage = in.readLine(); // Read the JSON message
-        System.out.println("Received handshake message: " + jsonMessage);
 
 
         Gson gson = new Gson();
         Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
         PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
-        System.out.println("Server's public key: " + serverPublicKey);
+        Logger.log("Received handshake message from server  " + handshakeMessage.getHeader() + " || body ->" + handshakeMessage.getBody() + "\n || public key -> " + handshakeMessage.getPublicKey());
 
 
         //send a new message to the server to let him know your public key and your in the body of the message(port number);
 
         Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURN, ""+portNumber, publicKeyToString(publicKey));
         String jsonResponse = gson.toJson(responseMessage);
-        System.out.println("Sending response handshake to server: " + jsonResponse);
+        Logger.log("Sending response handshake to server: " , LogLevel.Status);
 
         out.println(jsonResponse);
 
@@ -98,19 +113,78 @@ public class Client extends Thread{
         //it stores the publicKey and the peers socket and the writemeThread;
         connectedPeers.put(serverPublicKey, peerInfo);
 
-        System.out.println("This is my public key: " + publicKey);
+       //Logger.log("new connection :  ");
+       //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
+       //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
+       //Logger.log("----> IP :  " + socket.getInetAddress());
+       //Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
+       //Logger.log("----------------------------");
 
+        Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
 
-        Logger.log("new connection :  ");
-        Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
-        Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
-        Logger.log("----> IP :  " + socket.getInetAddress());
-        Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
-        Logger.log("----------------------------");
+        for (PublicKey publicKey1 : connectedPeers.keySet()) {
+            PeerInfo pInfo = connectedPeers.get(publicKey1);
+            Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
+        }
 
     }
 
     // Method to handle messages from the server
+
+    private void handleHandshakeFromServerIfSpecial(Socket socket) throws Exception {
+
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+        //System.out.println("Connected to server: " + hostName + ":" + connectToPort);
+
+        // read the first message from the server. it sohuld be the handshakeMessage
+
+        String jsonMessage = in.readLine(); // Read the JSON message... blocking method in caka na response.
+        Gson gson = new Gson();
+        Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
+        PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
+        Logger.log("Received handshake message from server  " + handshakeMessage.getHeader() + " || body ->" + handshakeMessage.getBody() + "\n || public key -> " + handshakeMessage.getPublicKey());
+
+
+        //send a new message to the server to let him know your public key and your in the body of the message(port number);
+
+        Message responseMessage = new Message(MessageType.PEERLISTRETURN, ""+portNumber, publicKeyToString(publicKey));
+        String jsonResponse = gson.toJson(responseMessage);
+        Logger.log("Sending response handshake to server: " , LogLevel.Status);
+
+        out.println(jsonResponse);
+
+
+        ListenToMeThred listenThread = new ListenToMeThred(socket, in, messageQueue);
+        new Thread(listenThread).start(); // Run the listening thread
+
+        WriteMeThread writeMeThread = new WriteMeThread(out);
+        new Thread(writeMeThread).start(); // Run the listening thread
+
+        PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,connectToPort);
+
+        // Store the client's information in connectedPeers
+        //it stores the publicKey and the peers socket and the writemeThread;
+        connectedPeers.put(serverPublicKey, peerInfo);
+
+        //Logger.log("new connection :  ");
+        //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
+        //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
+        //Logger.log("----> IP :  " + socket.getInetAddress());
+        //Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
+        //Logger.log("----------------------------");
+
+        Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
+
+        for (PublicKey publicKey1 : connectedPeers.keySet()) {
+            PeerInfo pInfo = connectedPeers.get(publicKey1);
+            Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
+        }
+
+    }
+
 
 
     //methods that help decode messages and keys and stuff

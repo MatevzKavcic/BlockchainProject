@@ -73,18 +73,19 @@ public class Server extends Thread{
         Gson gson = new Gson();
         String jsonMessage = gson.toJson(handshakeMessage);
 
-        Logger.log("Sending handshake message to client: ",LogLevel.Info);
+        Logger.log("Someon connected to me. Sending HANSHAKE message to client: ",LogLevel.Info);
         out.println(jsonMessage); // Send handshake to client
 
         // Read the response handshake message... public key and in the body there is a port number of the server port.
         String jsonResponseMessage = in.readLine(); // Wait for client's response
         Logger.log("Received response handshake message: " + jsonResponseMessage,LogLevel.Success);
 
-        // Deserialize the response and process the client's public key // and the body of the message is the portnumber of the server
+        // Deserialize the response and process the client's public key
+        // and the body of the message is the portnumber of the server
         Message responseMessage = gson.fromJson(jsonResponseMessage, Message.class);
         PublicKey clientPublicKey = stringToPublicKey(responseMessage.getPublicKey());
-        Logger.log("Client's public key: " + clientPublicKey , LogLevel.Info);
-        int peersPortNum = Integer.parseInt(responseMessage.getBody());
+
+        int peersPortNum = Integer.parseInt(responseMessage.getBody()); // port serverja od peera ki se je povezal
 
         ListenToMeThred listenThread = new ListenToMeThred(clientSocket, in, messageQueue);
         new Thread(listenThread).start(); // Run the listening thread
@@ -94,23 +95,25 @@ public class Server extends Thread{
 
         PeerInfo peerInfo = new PeerInfo(clientSocket,writeMeThread,peersPortNum);
 
-        // Store the client's information in connectedPeers
+        // ko pride na server moras vedt al se je prvo povezu nate ali ze na drugega.
+        if (responseMessage.getHeader()==MessageType.PEERLISTRETURN){
+            connectedPeers.put(clientPublicKey, peerInfo); // save it in your storage
+        }
+        else {
+            sendListToPeer(gson,writeMeThread);
+            connectedPeers.put(clientPublicKey, peerInfo);
+        }
+
+        Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
+
+        for (PublicKey publicKey1 : connectedPeers.keySet()) {
+            PeerInfo pInfo = connectedPeers.get(publicKey1);
+            Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
+        }
 
 
-        Logger.log("new connection :  ");
-        Logger.log("----> (kao sem se povezes) Local IP :  " + clientSocket.getLocalAddress());
-        Logger.log("----> (my port where i'm open) Local PORT :  " + clientSocket.getLocalPort());
-        Logger.log("----> IP :  " + clientSocket.getInetAddress());
-        Logger.log("----> (odprt port ku poslusa) PORT :  " + clientSocket.getPort());
-        Logger.log("----------------------------");
-
-        // TO IMPLEMENT:
-        // ko pride na server client ga moramo dat v omrezje  in naredimo protokol da bo poslau temu istemu peeru sporocilo z porti z katerirmi so bo mogu povezat.
-
-        sendListToPeer(gson,writeMeThread);
-
-        //it stores the publicKey and the peers socket and the peers server port in the connected peers.;
-        connectedPeers.put(clientPublicKey, peerInfo);
+        //TO IMPLEMENT:
+        //ko pride now peeer v network mu damo balance 100.0 "kao 100 eurou"
 
 
         //TO IMPLEMENT:
@@ -119,6 +122,7 @@ public class Server extends Thread{
 
     }
 
+    // metoda ki poslje array portov na katere se mora peer povezat. to naredi kinda se mi zdi
     private void sendListToPeer(Gson gson,WriteMeThread writeMeThread) {
 
         if (!connectedPeers.isEmpty()) {
