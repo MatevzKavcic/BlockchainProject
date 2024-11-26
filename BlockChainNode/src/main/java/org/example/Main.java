@@ -15,13 +15,15 @@ public class Main {
     Random random = new Random(6000);
 
     public static int portNumber =  6000 + (int)(Math.random() * 2001);
+
+    public static int portNumberOfFirstConnect= 6000;
     public static String hostName = "127.0.0.1";
     public static boolean firstNode = false;
 
 
     // this is the primary node or the root node so it will act as a server!
     public static void main(String[] args) {
-        Peer peer = new Peer(portNumber,hostName,firstNode);
+        Peer peer = new Peer(portNumber,hostName,firstNode,portNumberOfFirstConnect);
         peer.start();
 
     }

@@ -20,4 +20,9 @@ public class WriteMeThread extends Thread{
     public void  test(){
         System.out.println("thecuk");
     }
+
+    public void sendMessage(String message) {
+        out.println(message);
+        out.flush();
+    }
 }

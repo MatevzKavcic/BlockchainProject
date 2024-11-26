@@ -1,6 +1,7 @@
 package org.example;
 
 import com.google.gson.Gson;
+import util.LogLevel;
 import util.Logger;
 
 import java.io.BufferedReader;
@@ -25,21 +26,24 @@ public class Client extends Thread{
 
     private PrivateKey privateKey;
 
+    private int connectToPort;
 
 
-    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey) {
+
+    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort) {
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
         this.publicKey = publicKey;
         this.privateKey = privateKey;
+        this.connectToPort = connectToPort;
     }
 
     @Override
     public void run() {
         try {
-            Socket socket = new Socket(hostName, portNumber);
+            Socket socket = new Socket(hostName, connectToPort);
 
             // this method takes in the socket that was currently created.
             // what it does is a bit more complicated. It initiates the handshake protocol  and exchanges the public keys with the client and then creates two threads.
@@ -59,7 +63,7 @@ public class Client extends Thread{
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-        System.out.println("Connected to server: " + hostName + ":" + portNumber);
+        System.out.println("Connected to server: " + hostName + ":" + connectToPort);
 
         // read the first message from the server. it sohuld be the handshakeMessage
 
@@ -73,7 +77,7 @@ public class Client extends Thread{
         System.out.println("Server's public key: " + serverPublicKey);
 
 
-        //send a new message to the server to let him know your public key and your port number;
+        //send a new message to the server to let him know your public key and your in the body of the message(port number);
 
         Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURN, ""+portNumber, publicKeyToString(publicKey));
         String jsonResponse = gson.toJson(responseMessage);
@@ -88,7 +92,7 @@ public class Client extends Thread{
         WriteMeThread writeMeThread = new WriteMeThread(out);
         new Thread(writeMeThread).start(); // Run the listening thread
 
-        PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,portNumber);
+        PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,connectToPort);
 
         // Store the client's information in connectedPeers
         //it stores the publicKey and the peers socket and the writemeThread;

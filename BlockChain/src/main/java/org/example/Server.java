@@ -13,7 +13,9 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -78,7 +80,7 @@ public class Server extends Thread{
         String jsonResponseMessage = in.readLine(); // Wait for client's response
         Logger.log("Received response handshake message: " + jsonResponseMessage,LogLevel.Success);
 
-        // Deserialize the response and process the client's public key
+        // Deserialize the response and process the client's public key // and the body of the message is the portnumber of the server
         Message responseMessage = gson.fromJson(jsonResponseMessage, Message.class);
         PublicKey clientPublicKey = stringToPublicKey(responseMessage.getPublicKey());
         Logger.log("Client's public key: " + clientPublicKey , LogLevel.Info);
@@ -93,9 +95,7 @@ public class Server extends Thread{
         PeerInfo peerInfo = new PeerInfo(clientSocket,writeMeThread,peersPortNum);
 
         // Store the client's information in connectedPeers
-        //it stores the publicKey and the peers socket and the peers server port in the connected peers.;
 
-        connectedPeers.put(clientPublicKey, peerInfo);
 
         Logger.log("new connection :  ");
         Logger.log("----> (kao sem se povezes) Local IP :  " + clientSocket.getLocalAddress());
@@ -105,7 +105,12 @@ public class Server extends Thread{
         Logger.log("----------------------------");
 
         // TO IMPLEMENT:
-        // ko pride na server client ga moramo dat v omrezje  in naredimo protokol da bo poslau 10im random peerom da se bodo povezali se oni na njega.
+        // ko pride na server client ga moramo dat v omrezje  in naredimo protokol da bo poslau temu istemu peeru sporocilo z porti z katerirmi so bo mogu povezat.
+
+        sendListToPeer(gson,writeMeThread);
+
+        //it stores the publicKey and the peers socket and the peers server port in the connected peers.;
+        connectedPeers.put(clientPublicKey, peerInfo);
 
 
         //TO IMPLEMENT:
@@ -114,7 +119,20 @@ public class Server extends Thread{
 
     }
 
-//peer -> server,client -> writeMeThread,ListenToMeThread (Messaging service bo rabu met sepravi )
+    private void sendListToPeer(Gson gson,WriteMeThread writeMeThread) {
+
+        if (!connectedPeers.isEmpty()) {
+            List<Integer> serverPorts = new ArrayList<>();
+            for (PeerInfo peerInformation : connectedPeers.values()) {
+                serverPorts.add(peerInformation.getServerPort());
+            }
+            String serverPortsString = gson.toJson(serverPorts);
+            Message peerListMessage = new Message(MessageType.PEERLIST, serverPortsString, "");
+            writeMeThread.sendMessage(gson.toJson(peerListMessage));
+        }
+    }
+
+    //peer -> server,client -> writeMeThread,ListenToMeThread (Messaging service bo rabu met sepravi )
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }

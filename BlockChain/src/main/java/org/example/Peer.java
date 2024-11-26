@@ -3,14 +3,8 @@ package org.example;
 import util.LogLevel;
 import util.Logger;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +18,7 @@ public class Peer extends Thread {
 
      int portNumber; // portnumber je numbeer serverja kje se bo odprl
      String hostName;
+    int portNumberOfFirstConnect;
     boolean firstNode ;
 
     KeyGenerator keyGenerator ;
@@ -31,10 +26,11 @@ public class Peer extends Thread {
     private ConcurrentHashMap<PublicKey,PeerInfo> connectedPeers = new ConcurrentHashMap<>();
 
 
-    public Peer(int portNumber, String hostName, boolean firstNode) {
+    public Peer(int portNumber, String hostName, boolean firstNode, int portNumberOfFirstConnect) {
         this.portNumber = portNumber;
         this.hostName = hostName;
         this.firstNode = firstNode;
+        this.portNumberOfFirstConnect= portNumberOfFirstConnect;
         keyGenerator=new KeyGenerator();
     }
 
@@ -64,7 +60,7 @@ public class Peer extends Thread {
                 server.start();
 
                 // and then make a thread that will listen to
-                Client client = new Client(hostName,portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
+                Client client = new Client(hostName,portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),portNumberOfFirstConnect);
                 client.start();
 
             }

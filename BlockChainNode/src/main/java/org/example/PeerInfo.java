@@ -29,4 +29,12 @@ public class PeerInfo {
     public void setThread(Thread thread) {
         this.thread = thread;
     }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
+    public void setServerPort(int serverPort) {
+        this.serverPort = serverPort;
+    }
 }

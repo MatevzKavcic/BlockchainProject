@@ -17,6 +17,7 @@ public class Peer extends Thread {
 
 
      int portNumber; // portnumber je numbeer serverja kje se bo odprl
+     int portNumberOfFirstConnect;
      String hostName;
     boolean firstNode ;
 
@@ -25,10 +26,11 @@ public class Peer extends Thread {
     private ConcurrentHashMap<PublicKey,PeerInfo> connectedPeers = new ConcurrentHashMap<>();
 
 
-    public Peer(int portNumber, String hostName, boolean firstNode) {
+    public Peer(int portNumber, String hostName, boolean firstNode,int portNumberOfFirstConnect) {
         this.portNumber = portNumber;
         this.hostName = hostName;
         this.firstNode = firstNode;
+        this.portNumberOfFirstConnect= portNumberOfFirstConnect;
         keyGenerator=new KeyGenerator();
     }
 
@@ -58,7 +60,7 @@ public class Peer extends Thread {
                 server.start();
 
                 // and then make a thread that will listen to // hardcoding 600 into the portnumber cuz its connecting to the server on port 6000;
-                Client client = new Client(hostName,6000,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
+                Client client = new Client(hostName,portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),portNumberOfFirstConnect);
                 client.start();
 
             }
