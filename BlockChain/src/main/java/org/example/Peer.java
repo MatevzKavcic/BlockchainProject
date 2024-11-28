@@ -5,6 +5,7 @@ import util.Logger;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +45,9 @@ public class Peer extends Thread {
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
 
-            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
+            Blockchain blockchain = new Blockchain();
+
+            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain);
             messagingServiceThread.start();
 
             if (firstNode) {

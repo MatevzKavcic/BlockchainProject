@@ -126,6 +126,29 @@ public class Client extends Thread{
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
+
+
+        //TO IMPLEMENT:
+        // send a message to everyone with you wallet
+
+
+        //TO IMPLEMENT:
+        //BLOCKCHAIN veriga in ja usa ta jajca
+        // zdej implementirej da usak client na koncu preden bo uporabljen samo za poslusanje, da poslje message serverju header:BLOCKCHAINREQUEST in poslji random serverju ne pa vedno enemu
+        //in pol server mu poslje SERVER header:BLOCKCHAINRESPONSE in mu poslje ceu blockchain.
+
+
+        requestBlockchain(out,gson);
+
+
+
+    }
+
+    private void requestBlockchain(PrintWriter out,Gson gson) {
+        Message blockchainRequest = new Message(MessageType.BLOCKCHAINREQUEST,"",publicKeyToString(publicKey));
+        String blockchainRequestString = gson.toJson(blockchainRequest);
+        out.println(blockchainRequestString);
+
     }
 
     // Method to handle messages from the server

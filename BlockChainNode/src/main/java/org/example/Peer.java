@@ -43,8 +43,9 @@ public class Peer extends Thread {
             Logger.log("My IP: " + myIp, LogLevel.Info);
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
+            Blockchain blockchain = new Blockchain();
 
-            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey());
+            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain);
             messagingServiceThread.start();
 
             if (firstNode) {

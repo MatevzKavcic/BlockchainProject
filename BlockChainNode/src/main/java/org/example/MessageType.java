@@ -6,7 +6,11 @@ public enum MessageType {
 
     PEERLIST,
 
-    PEERLISTRETURN
+    PEERLISTRETURN,
+
+    BLOCKCHAINREQUEST,
+
+    BLOCKCHAINRESPONSE,
 
 
 }
