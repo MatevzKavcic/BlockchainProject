@@ -1,5 +1,8 @@
 package org.example;
+
 import java.util.List;
+
+
 
 public class Block {
     private int index;
@@ -79,7 +82,16 @@ public class Block {
         this.nonce = nonce;
     }
 
-
+    @Override
+    public String toString() {
+        return "Block{" +
+                "index=" + index +
+                ", timestamp=" + timestamp +
+                ", transactions=" + transactions +
+                ", previousHash='" + previousHash + '\'' +
+                ", hash='" + hash + '\'' +
+                '}';
+    }
 
     // Getters for block properties
 }

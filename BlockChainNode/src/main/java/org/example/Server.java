@@ -124,7 +124,7 @@ public class Server extends Thread{
                 serverPorts.add(peerInformation.getServerPort());
             }
             String serverPortsString = gson.toJson(serverPorts);
-            Message peerListMessage = new Message(MessageType.PEERLIST, serverPortsString, "");
+            Message peerListMessage = new Message(MessageType.PEERLIST, serverPortsString, publicKeyToString(publicKey));
             writeMeThread.sendMessage(gson.toJson(peerListMessage));
         }
     }

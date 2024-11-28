@@ -24,6 +24,7 @@ public class Peer extends Thread {
     KeyGenerator keyGenerator ;
 
     private ConcurrentHashMap<PublicKey,PeerInfo> connectedPeers = new ConcurrentHashMap<>();
+    public Blockchain blockchain = null;
 
 
     public Peer(int portNumber, String hostName, boolean firstNode,int portNumberOfFirstConnect) {
@@ -43,7 +44,6 @@ public class Peer extends Thread {
             Logger.log("My IP: " + myIp, LogLevel.Info);
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
-            Blockchain blockchain = new Blockchain();
 
             MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain);
             messagingServiceThread.start();

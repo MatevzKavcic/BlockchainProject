@@ -12,7 +12,6 @@ public class Blockchain {
         chain.add(createGenesisBlock());
     }
 
-
     private Block createGenesisBlock() {
         return new Block(0, System.currentTimeMillis(), new ArrayList<>(), "0");
     }
@@ -47,4 +46,5 @@ public class Blockchain {
     public List<Block> getChain() {
         return chain;
     }
+
 }

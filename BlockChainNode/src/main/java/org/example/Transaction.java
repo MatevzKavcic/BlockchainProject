@@ -17,4 +17,3 @@ public class Transaction {
 
     // Getters and setters
 }
-

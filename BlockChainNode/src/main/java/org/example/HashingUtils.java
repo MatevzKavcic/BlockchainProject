@@ -1,4 +1,3 @@
-
 package org.example;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

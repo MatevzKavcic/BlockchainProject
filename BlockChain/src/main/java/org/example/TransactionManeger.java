@@ -9,4 +9,6 @@ public class TransactionManeger {
     Map<PublicKey, Double> balances = new HashMap<>();
 
 
+
+
 }

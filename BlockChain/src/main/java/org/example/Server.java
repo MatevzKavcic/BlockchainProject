@@ -30,13 +30,15 @@ public class Server extends Thread{
 
     private PrivateKey privateKey;
 
-    public Server(int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey) {
+    private Blockchain blockchain;
+    public Server(int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, Blockchain blockchain) {
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
         this.publicKey =publicKey;
         this.privateKey = privateKey;
 
+        this.blockchain = blockchain;
     }
 
     @Override
@@ -116,10 +118,26 @@ public class Server extends Thread{
         //ko pride now peeer v network mu damo balance 100.0 "kao 100 eurou"
 
 
+
         //TO IMPLEMENT:
         // ko pride bo potreboval tudi blockchain od soseda in bo dau request.
 
+        //IMPORTANT !!!!
+        //ONLY THIS SERVER CLASS HAS THIS METHOD... WHEN YOU CONNECT TO THIS SERVER YOU GET
+        //THE BLOCKCHAIN.. LATER YOU CAN REQUEST IT BUT THIS IS FOR TESTING
+        // to bo cene implementiral class ki bo pac rabu blockchain so Miner al neki .
+        sendBlockchain(out,gson);
 
+
+    }
+
+
+    private void sendBlockchain(PrintWriter out,Gson gson) {
+
+
+        Message blockchainRequest = new Message(MessageType.BLOCKCHAINITIALIZE,gson.toJson(blockchain),publicKeyToString(publicKey));
+        String blockchainRequestString = gson.toJson(blockchainRequest);
+        out.println(blockchainRequestString);
     }
 
     // metoda ki poslje array portov na katere se mora peer povezat. to naredi kinda se mi zdi
@@ -131,7 +149,7 @@ public class Server extends Thread{
                 serverPorts.add(peerInformation.getServerPort());
             }
             String serverPortsString = gson.toJson(serverPorts);
-            Message peerListMessage = new Message(MessageType.PEERLIST, serverPortsString, "");
+            Message peerListMessage = new Message(MessageType.PEERLIST, serverPortsString, publicKeyToString(publicKey));
             writeMeThread.sendMessage(gson.toJson(peerListMessage));
         }
     }
