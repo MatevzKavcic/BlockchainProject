@@ -127,6 +127,20 @@ public class Client extends Thread{
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
 
+
+        // IMPORTANT THE SERVIR WILL AUTOMATICLY SEND YOU A BLOCKCHAIN.
+        // server you want a blockchain.
+
+
+
+
+    }
+
+    private void requestBlockchain(PrintWriter out,Gson gson) {
+        Message blockchainRequest = new Message(MessageType.BLOCKCHAINREQUEST,"",publicKeyToString(publicKey));
+        String blockchainRequestString = gson.toJson(blockchainRequest);
+        out.println(blockchainRequestString);
+
     }
 
     // Method to handle messages from the server
