@@ -22,11 +22,7 @@ public class WriteMeThread extends Thread{
     }
 
     public void sendMessage(String message) {
-        try {
-            out.println(message);
-            out.flush();
-        } catch (Exception e) {
-            System.err.println("Error sending message: " + e.getMessage());
-        }
+        out.println(message);
+        out.flush();
     }
 }

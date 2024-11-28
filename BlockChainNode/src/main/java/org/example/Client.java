@@ -41,7 +41,7 @@ public class Client extends Thread{
         this.privateKey = privateKey;
         this.connectToPort = connectToPort;
     }
-    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort, boolean isSpecial) {
+    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,boolean isSpecial) {
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
@@ -113,41 +113,19 @@ public class Client extends Thread{
         //it stores the publicKey and the peers socket and the writemeThread;
         connectedPeers.put(serverPublicKey, peerInfo);
 
-        //Logger.log("new connection :  ");
-        //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
-        //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
-        //Logger.log("----> IP :  " + socket.getInetAddress());
-        //Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
-        //Logger.log("----------------------------");
+       //Logger.log("new connection :  ");
+       //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
+       //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
+       //Logger.log("----> IP :  " + socket.getInetAddress());
+       //Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
+       //Logger.log("----------------------------");
 
-        Logger.log("i have " + connectedPeers.size() + " peers connected to me. those peers are on ports" , LogLevel.Status);
+        Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
 
         for (PublicKey publicKey1 : connectedPeers.keySet()) {
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
-
-
-        //TO IMPLEMENT:
-        // send a message to everyone with you wallet
-
-
-        //TO IMPLEMENT:
-        //BLOCKCHAIN veriga in ja usa ta jajca
-        // zdej implementirej da usak client na koncu preden bo uporabljen samo za poslusanje, da poslje message serverju header:BLOCKCHAINREQUEST in poslji random serverju ne pa vedno enemu
-        //in pol server mu poslje SERVER header:BLOCKCHAINRESPONSE in mu poslje ceu blockchain.
-
-
-        requestBlockchain(out,gson);
-
-
-
-    }
-
-    private void requestBlockchain(PrintWriter out,Gson gson) {
-        Message blockchainRequest = new Message(MessageType.BLOCKCHAINREQUEST,"",publicKeyToString(publicKey));
-        String blockchainRequestString = gson.toJson(blockchainRequest);
-        out.println(blockchainRequestString);
 
     }
 

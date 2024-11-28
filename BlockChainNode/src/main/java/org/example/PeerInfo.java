@@ -4,11 +4,11 @@ import java.net.Socket;
 
 public class PeerInfo {
     private Socket socket;
-    private WriteMeThread thread; // Reference to the thread
+    private Thread thread; // Reference to the thread
 
     private int serverPort;
 
-    public PeerInfo(Socket socket, WriteMeThread thread, int serverPort) {
+    public PeerInfo(Socket socket, Thread thread, int serverPort) {
         this.socket = socket;
         this.thread = thread;
         this.serverPort = serverPort;
@@ -26,6 +26,9 @@ public class PeerInfo {
         this.socket = socket;
     }
 
+    public void setThread(Thread thread) {
+        this.thread = thread;
+    }
 
     public int getServerPort() {
         return serverPort;
