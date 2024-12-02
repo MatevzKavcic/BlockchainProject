@@ -39,6 +39,7 @@ public class Server extends Thread{
         this.privateKey = privateKey;
         this.blockchain = blockchain;
         this.UTXOPool = UTXOPool;
+        this.setName("Server Thread");
     }
 
     @Override
@@ -117,17 +118,6 @@ public class Server extends Thread{
         //TO IMPLEMENT:
         //ko pride now peeer v network mu damo balance 100.0 "kao 100 eurou"
 
-
-
-        //TO IMPLEMENT:
-        // ko pride bo potreboval tudi blockchain od soseda in bo dau request. to mora dat client
-
-        //IMPORTANT !!!!
-        //ONLY THIS SERVER CLASS HAS THIS METHOD... WHEN YOU CONNECT TO THIS SERVER YOU GET
-        //THE BLOCKCHAIN.. LATER YOU CAN REQUEST IT BUT THIS IS FOR TESTING
-        // to bo cene implementiral class ki bo pac rabu blockchain so Miner al neki .
-        //sendBlockchain(out,gson);
-        // in UTXO pool bo rabu.
         //sendUTXOPool(out,gson);
     }
 

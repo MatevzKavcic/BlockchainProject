@@ -35,6 +35,7 @@ public class MessagingService extends Thread {
         this.blockchain  = blockchain;
         this.utxoPool = utxoPool;
         this.transactionManager = transactionManager;
+        this.setName("Messaging service Thread");
     }
 
     String hostName;
@@ -51,6 +52,7 @@ public class MessagingService extends Thread {
 
     @Override
     public void run() {
+
         try {
 
             // bussy waiting for someone to put something in the queue. when that happens it proceses it.

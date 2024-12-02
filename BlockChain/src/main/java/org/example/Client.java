@@ -42,6 +42,7 @@ public class Client extends Thread{
         this.privateKey = privateKey;
         this.connectToPort = connectToPort;
         this.transactionManager = transactionManager;
+        this.setName("Primary Client Thread");
     }
     public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,boolean isSpecial) {
         this.hostName = hostName;
@@ -52,6 +53,7 @@ public class Client extends Thread{
         this.privateKey = privateKey;
         this.connectToPort = connectToPort;
         this.isSpecial= isSpecial;
+        this.setName("Secondary client Thread" + connectedPeers.size());
     }
 
     @Override

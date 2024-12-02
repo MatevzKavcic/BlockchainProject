@@ -26,6 +26,8 @@ public class TransactionManager extends Thread{
         this.utxoPool = utxoPool;
         this.connectedPeers = connectedPeers;
         this.publicKey = publicKey;
+        this.setName("transaction Mannager Thread");
+
     }
 
     public void run(){
@@ -49,6 +51,11 @@ public class TransactionManager extends Thread{
 
     }
 
+    //method ki bo poslau v network prosnjo da se updejta UTXO pool tako da bojo dodali se njega.
+    public void updateUTXOPool(){
+
+
+    }
 
 
 

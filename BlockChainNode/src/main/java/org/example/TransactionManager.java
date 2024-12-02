@@ -34,6 +34,10 @@ public class TransactionManager extends Thread{
         // to bo class ki booo na zacetku requestou blockchain
         //oz bo requestau za thread pool in pol ko bo dobil kaksno transakcijo jo bo moral obbdelat in ja...
 
+        //requestBlockchain();
+
+        // naredi ko mas connected peers size usaj 1 pol
+
     }
 
     public void requestBlockchain(PublicKey publicKey) {
@@ -43,9 +47,15 @@ public class TransactionManager extends Thread{
         Message m = new Message(MessageType.BLOCKCHAINREQUEST,"",publicKeyToString(MyPublicKey));
         String mString = gson.toJson(m);
 
+        //public key tistega k mu bos poslau.
         WriteMeThread thread = (WriteMeThread) connectedPeers.get(publicKey).getThread();
 
         thread.sendMessage( mString);
+
+    }
+
+    public void updateUTXOPool(){
+
 
     }
 
