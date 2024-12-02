@@ -17,17 +17,16 @@ public class UTXOPool {
         return UTXOPool;
     }
 
-    //public void updateUTXOPool(Transaction transaction) {
-    //    // Remove spent UTXOs
-    //    for (TransactionInput input : transaction.getInputs()) {
-    //        UTXOPool.remove(input.getTransactionOutputId());
-    //    }
-//
-    //    // Add new UTXOs
-    //    for (TransactionOutput output : transaction.getOutputs()) {
-    //        UTXOPool.put(output.getId(), output);
-    //    }
-    //}
+    public void updateUTXOPool(Transaction transaction) {
+        // Remove spent UTXOs
+        for (TransactionInput input : transaction.getInputs()) {
+            UTXOPool.remove(input.getTransactionOutputId());
+        }
+        // Add new UTXOs
+        for (TransactionOutput output : transaction.getOutputs()) {
+            UTXOPool.put(output.getId(), output);
+        }
+    }
 
 
     public void addUTXO(TransactionOutput output) {

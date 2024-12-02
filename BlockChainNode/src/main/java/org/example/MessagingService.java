@@ -52,7 +52,6 @@ public class MessagingService extends Thread {
 
     @Override
     public void run() {
-
         try {
 
             // bussy waiting for someone to put something in the queue. when that happens it proceses it.
@@ -117,6 +116,11 @@ public class MessagingService extends Thread {
 
                     }
 
+
+                    case TRANSACTION -> {
+                        Logger.log("RECIEVED A NEW TRANSACTION FROM : "+ sender,LogLevel.Success);
+
+                    }
                 }
 
 

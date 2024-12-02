@@ -116,6 +116,11 @@ public class MessagingService extends Thread {
 
                     }
 
+
+                    case TRANSACTION -> {
+                    Logger.log("RECIEVED A NEW TRANSACTION FROM : "+ sender,LogLevel.Success);
+
+                    }
                 }
 
 

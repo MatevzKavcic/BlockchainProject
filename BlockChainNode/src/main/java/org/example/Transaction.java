@@ -1,51 +1,76 @@
 package org.example;
+import java.util.List;
 
 public class Transaction {
-    private String sender;
-    private String recipient;
-    private double amount;
+    private String transactionId; // Unique identifier for the transaction
+    private List<TransactionInput> inputs; // UTXOs being spent
+    private List<TransactionOutput> outputs; // New UTXOs being created
+    private String sender; // Public key of the sender
+    private String recipient; // Public key of the recipient
+    private double amount; // Total amount being transferred
 
-    public Transaction(String sender, String recipient, double amount) {
+    public Transaction(String sender, String recipient, double amount, List<TransactionInput> inputs, List<TransactionOutput> outputs) {
         this.sender = sender;
         this.recipient = recipient;
         this.amount = amount;
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.transactionId = calculateHash();
     }
 
-    /*public Transaction createTransaction(String senderPublicKey, String recipientPublicKey, double amount, UTXOPool utxoPool) {
-        List<TransactionInput> inputs = new ArrayList<>();
-        List<TransactionOutput> outputs = new ArrayList<>();
-        double total = 0;
-
-        // Gather sufficient outputs
-       for (TransactionOutput output : utxoPool.getUTXOPool().values()) {
-           if (output.isOwnedBy(senderPublicKey)) {
-               inputs.add(new TransactionInput(output.getId()));
-               total += output.getAmount();
-               utxoPool.removeOutput(output.getId()); // Remove spent output
-               if (total >= amount) break;
-           }
-       }
-
-        if (total < amount) {
-            throw new IllegalArgumentException("Insufficient balance.");
-        }
-
-        // Create outputs
-        outputs.add(new TransactionOutput(recipientPublicKey, amount, "NEW_TRANSACTION_ID", 0));
-        if (total > amount) {
-            outputs.add(new TransactionOutput(senderPublicKey, total - amount, "NEW_TRANSACTION_ID", 1)); // Change
-        }
-
-        // Add new outputs to the pool
-        for (TransactionOutput output : outputs) {
-             utxoPool.addOutput(output);
-        }
-
-        return new Transaction(senderPublicKey, recipientPublicKey, amount, inputs, outputs);
+    private String calculateHash() {
+        // Generate a unique ID for the transaction
+        return HashingUtils.applySHA256(sender + recipient + amount + inputs.toString() + outputs.toString());
     }
 
-     */
+    public boolean validateTransaction(UTXOPool utxoPool) {
+        double inputSum = 0;
 
+        // Verify inputs are valid
+        for (TransactionInput input : inputs) {
+            TransactionOutput UTXO = utxoPool.getUTXOPool().get(input.getTransactionOutputId());
+            if (UTXO == null || !UTXO.isMine(sender)) {
+                return false; // Input is invalid or not owned by the sender
+            }
+            input.setUTXO(UTXO); // Attach the UTXO to the input
+            inputSum += UTXO.getAmount();
+        }
+
+        // Ensure the sender has sufficient funds
+        if (inputSum < amount) {
+            return false; // Insufficient balance
+        }
+
+        // Outputs must not exceed the inputs
+        double outputSum = outputs.stream().mapToDouble(TransactionOutput::getAmount).sum();
+        return inputSum == outputSum;
+    }
+
+
+    // Getters and setters
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    public List<TransactionInput> getInputs() {
+        return inputs;
+    }
+
+    public void setInputs(List<TransactionInput> inputs) {
+        this.inputs = inputs;
+    }
+
+    public List<TransactionOutput> getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(List<TransactionOutput> outputs) {
+        this.outputs = outputs;
+    }
 
     public String getSender() {
         return sender;
@@ -70,11 +95,4 @@ public class Transaction {
     public void setAmount(double amount) {
         this.amount = amount;
     }
-
-    @Override
-    public String toString() {
-        return sender + " -> " + recipient + ": " + amount;
-    }
-
-    // Getters and setters
 }
