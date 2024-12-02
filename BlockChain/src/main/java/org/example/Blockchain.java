@@ -1,21 +1,32 @@
 package org.example;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Blockchain {
     private List<Block> chain; // the whole blockchain
 
-    public Blockchain() {
+    private UTXOPool UTXOPool ;
+
+
+    public Blockchain(UTXOPool UTXOPool) {
         chain = new ArrayList<>();
         // Add the genesis block
         chain.add(createGenesisBlock());
+        this.UTXOPool = UTXOPool;
     }
 
     private Block createGenesisBlock() {
         return new Block(0, System.currentTimeMillis(), new ArrayList<>(), "0");
+    }
+
+    public UTXOPool getUTXOPool() {
+        return UTXOPool;
+    }
+
+    public void setUTXOPool(org.example.UTXOPool UTXOPool) {
+        this.UTXOPool = UTXOPool;
     }
 
     public Block getLatestBlock() {

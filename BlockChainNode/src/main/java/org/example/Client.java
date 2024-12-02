@@ -29,10 +29,11 @@ public class Client extends Thread{
     private int connectToPort;
 
     boolean isSpecial = false;
+    public TransactionManager transactionManager;
 
 
 
-    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort) {
+    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,TransactionManager transactionManager) {
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
@@ -40,6 +41,7 @@ public class Client extends Thread{
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.connectToPort = connectToPort;
+        this.transactionManager = transactionManager;
     }
     public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,boolean isSpecial) {
         this.hostName = hostName;
@@ -113,33 +115,21 @@ public class Client extends Thread{
         //it stores the publicKey and the peers socket and the writemeThread;
         connectedPeers.put(serverPublicKey, peerInfo);
 
-       //Logger.log("new connection :  ");
-       //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
-       //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
-       //Logger.log("----> IP :  " + socket.getInetAddress());
-       //Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
-       //Logger.log("----------------------------");
+        //Logger.log("new connection :  ");
+        //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
+        //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
+        //Logger.log("----> IP :  " + socket.getInetAddress());
+        //Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
+        //Logger.log("----------------------------");
 
-        Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
+        Logger.log("i have " + connectedPeers.size() + " peers connected to me. those peers are on ports" , LogLevel.Status);
 
         for (PublicKey publicKey1 : connectedPeers.keySet()) {
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
 
-
-        // IMPORTANT THE SERVIR WILL AUTOMATICLY SEND YOU A BLOCKCHAIN.
-        // server you want a blockchain.
-
-
-
-
-    }
-
-    private void requestBlockchain(PrintWriter out,Gson gson) {
-        Message blockchainRequest = new Message(MessageType.BLOCKCHAINREQUEST,"",publicKeyToString(publicKey));
-        String blockchainRequestString = gson.toJson(blockchainRequest);
-        out.println(blockchainRequestString);
+        transactionManager.requestBlockchain(serverPublicKey);
 
     }
 
@@ -196,6 +186,8 @@ public class Client extends Thread{
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
+
+        //na koncu nesmes requestat za blockchain ker ga ze mas od prevega node ko se povezes.
 
     }
 

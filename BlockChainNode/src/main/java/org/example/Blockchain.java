@@ -6,10 +6,14 @@ import java.util.List;
 public class Blockchain {
     private List<Block> chain; // the whole blockchain
 
-    public Blockchain() {
+    private UTXOPool UTXOPool ;
+
+    public Blockchain(UTXOPool UTXOPool) {
         chain = new ArrayList<>();
         // Add the genesis block
         chain.add(createGenesisBlock());
+        this.UTXOPool = UTXOPool;
+
     }
 
     private Block createGenesisBlock() {
@@ -23,6 +27,9 @@ public class Blockchain {
     public void addBlock(Block newBlock) {
         newBlock.mineBlock(4); // Adjust difficulty as needed
         chain.add(newBlock);
+    }
+    public UTXOPool getUTXOPool() {
+        return UTXOPool;
     }
 
     public boolean isChainValid() {

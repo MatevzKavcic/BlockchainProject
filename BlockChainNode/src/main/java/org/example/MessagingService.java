@@ -21,7 +21,11 @@ public class MessagingService extends Thread {
 
     public Blockchain blockchain;
 
-    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, String hostName, int portNumber, PublicKey publicKey, PrivateKey privateKey,Blockchain blockchain) {
+    private UTXOPool utxoPool;
+
+    private TransactionManager transactionManager;
+
+    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, String hostName, int portNumber, PublicKey publicKey, PrivateKey privateKey, Blockchain blockchain, UTXOPool utxoPool, TransactionManager transactionManager) {
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
         this.hostName = hostName;
@@ -29,6 +33,8 @@ public class MessagingService extends Thread {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.blockchain  = blockchain;
+        this.utxoPool = utxoPool;
+        this.transactionManager = transactionManager;
     }
 
     String hostName;
@@ -42,6 +48,7 @@ public class MessagingService extends Thread {
     Gson gson = new Gson();
 
 
+
     @Override
     public void run() {
         try {
@@ -53,8 +60,6 @@ public class MessagingService extends Thread {
                 Type type = new TypeToken<ArrayList<Integer>>() {}.getType();
 
                 Message messageObject = gson.fromJson(message,Message.class);
-
-                Logger.log(blockchain+"", LogLevel.Success);
 
                 PublicKey sender  = stringToPublicKey(messageObject.getPublicKey()) ;
                 switch (messageObject.getHeader()) {
@@ -88,13 +93,28 @@ public class MessagingService extends Thread {
                     }
                     case BLOCKCHAINRESPONSE -> {
                         blockchain = gson.fromJson(messageObject.getBody(), Blockchain.class);//string zs blockchainBody
+
                     }
 
                     // if you get this block it means that you just connected to a network and the node you connected to sent you this message.
+                    case BLOCKCHAINSEND -> {
+                    }
                     case BLOCKCHAINITIALIZE -> {
                         blockchain = gson.fromJson(messageObject.getBody(), Blockchain.class);//string zs blockchainBody
-                        Logger.log(blockchain.getLatestBlock().toString() , LogLevel.Success);
+
+                        utxoPool= blockchain.getUTXOPool();
+                        Logger.log(blockchain.getUTXOPool().toString() ,LogLevel.Warn);
+
                     }
+
+
+                    case UTXOPOOLINITIALIZATION -> {
+                        utxoPool= gson.fromJson(messageObject.getBody(), UTXOPool.class);
+
+                        Logger.log(blockchain.getUTXOPool().toString() ,LogLevel.Warn);
+
+                    }
+
                 }
 
 

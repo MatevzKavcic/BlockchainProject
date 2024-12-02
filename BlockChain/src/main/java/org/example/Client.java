@@ -29,10 +29,11 @@ public class Client extends Thread{
     private int connectToPort;
 
     boolean isSpecial = false;
+    public TransactionManager transactionManager;
 
 
 
-    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort) {
+    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,TransactionManager transactionManager) {
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
@@ -40,6 +41,7 @@ public class Client extends Thread{
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.connectToPort = connectToPort;
+        this.transactionManager = transactionManager;
     }
     public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,boolean isSpecial) {
         this.hostName = hostName;
@@ -126,6 +128,9 @@ public class Client extends Thread{
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
+
+        transactionManager.requestBlockchain(serverPublicKey);
+
     }
 
     // Method to handle messages from the server
@@ -181,6 +186,8 @@ public class Client extends Thread{
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
+
+        //na koncu nesmes requestat za blockchain ker ga ze mas od prevega node ko se povezes.
 
     }
 
