@@ -88,7 +88,8 @@ public class MessagingService extends Thread {
                         PeerInfo peerInfo = connectedPeers.get(sender);
 
                         WriteMeThread thread = (WriteMeThread) peerInfo.getThread();
-                        Message m = new Message(MessageType.BLOCKCHAINRESPONSE,gson.toJson(blockchain),publicKeyToString(publicKey));
+                        String pkString = publicKeyToString(publicKey);
+                        Message m = new Message(MessageType.BLOCKCHAINRESPONSE,gson.toJson(blockchain), pkString);
                         String mString = gson.toJson(m);
                         thread.sendMessage( mString);
                     }

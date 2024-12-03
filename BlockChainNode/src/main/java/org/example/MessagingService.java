@@ -118,8 +118,27 @@ public class MessagingService extends Thread {
 
 
                     case TRANSACTION -> {
-                        Logger.log("RECIEVED A NEW TRANSACTION FROM : "+ sender,LogLevel.Success);
+                      // Logger.log("Received a new transaction from: " + sender, LogLevel.Success);
 
+                      // // Parse the transaction from the message body
+                      // Transaction receivedTransaction = gson.fromJson(messageObject.getBody(), Transaction.class);
+
+                      // // Step 1: Verify the transaction (signatures, inputs, etc.)
+                      // boolean isValid = verifyTransaction(receivedTransaction);
+
+                      // if (!isValid) {
+                      //     Logger.log("Invalid transaction from: " + sender, LogLevel.Warn);
+                      //     return; // Discard the invalid transaction
+                      // }
+
+                      // // Step 2: Update UTXO pool
+                      // updateUTXOPool(receivedTransaction);
+
+                      // // Step 3: Add the transaction to the mempool or handle it further
+                      // // For now, let's assume we're adding it to the mempool or just logging it
+                      // addTransactionToMempool(receivedTransaction);
+
+                      // Logger.log("Transaction added successfully.", LogLevel.Info);
                     }
                 }
 
@@ -134,6 +153,7 @@ public class MessagingService extends Thread {
             throw new RuntimeException(e);
         }
     }
+
     public PublicKey stringToPublicKey(String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);

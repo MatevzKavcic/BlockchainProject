@@ -86,14 +86,14 @@ public class TransactionManager extends Thread{
 
 
     */
-    public void requestBlockchain(PublicKey publicKey) {
+    public void requestBlockchain(PublicKey sendToPublicKey) {
 
         //enega rendom peera dobi in poslji blockchainrequest.
 
         Message m = new Message(MessageType.BLOCKCHAINREQUEST,"",publicKeyToString(publicKey));
         String mString = gson.toJson(m);
 
-        WriteMeThread thread = (WriteMeThread) connectedPeers.get(publicKey).getThread();
+        WriteMeThread thread = (WriteMeThread) connectedPeers.get(sendToPublicKey).getThread();
 
         thread.sendMessage( mString);
 

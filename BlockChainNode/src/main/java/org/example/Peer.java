@@ -46,7 +46,7 @@ public class Peer extends Thread {
 
             UTXOPool UTXOPool = new UTXOPool(); // tle mora bit null
 
-            Blockchain blockchain = new Blockchain(UTXOPool);
+            Blockchain blockchain = null;
 
             TransactionManager transactionManager = new TransactionManager(UTXOPool,connectedPeers, keyGenerator.getPublicKey(),blockchain);
 

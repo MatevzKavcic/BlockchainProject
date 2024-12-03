@@ -1,5 +1,6 @@
 package org.example;
 import com.google.gson.Gson;
+import util.Logger;
 
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -57,36 +58,54 @@ public class MinerThread extends Thread {
         // Gather UTXOs to cover the amount
         List<TransactionInput> inputs = new ArrayList<>();
         List<TransactionOutput> outputs = new ArrayList<>();
-        double total = 0;
+        double total = 0; // value kolko imam skupaj fundou
 
         String senderPublicKey = publicKeyToString(publicKey); // moj public key.
 
 
-        //loopni skozi use UTXO in najdi kolko fundou imas
-        for (TransactionOutput output : utxoPool.getUTXOPool().values()) {
-            // dobi vse UTXO ki so moji
-            if (output.isMine(senderPublicKey)) {
-                inputs.add(new TransactionInput(output.getId()));
-                total += output.getAmount();
-                utxoPool.removeUTXO(output.getId()); // Mark as spent
-                if (total >= amount) break;
-            }
-        }
-
-        if (total < amount) {
+        if (utxoPool.getMyTotalFunds(senderPublicKey) < amount) {
             System.out.println("Insufficient funds for transaction. Needed: " + amount + ", Available: " + total);
             return null;
         }
+        else {
+
+            //ves da imas dovolj fundou in samo pobrisi tiste ko bos porabu
+            for (TransactionOutput output : utxoPool.getUTXOPool().values()) {
+
+                // dobi vse UTXO ki so moji
+                if (output.isMine(senderPublicKey)) {
+                    Logger.log("Imam kovancek vrednosti : ->" + output.getAmount() );
+                    inputs.add(new TransactionInput(output.getId()));
+                    total += output.getAmount();
+                    // ta output ki si ga sesteu skupaj ga moras odstet z poola in pol total-amount = now output
+                    utxoPool.removeUTXO(output.getId()); // Mark as spent
+                    if (total >= amount) {
+                        break;
+                    }
+                }
+            }
+
+        }
+
 
         // Create outputs
         // nov output ki je unique vedno
-        outputs.add(new TransactionOutput(recipientPublicKey, amount, UUID.randomUUID().toString()));
+        String idOfTheTransaction = UUID.randomUUID().toString();
+
+        outputs.add(new TransactionOutput(recipientPublicKey, amount,idOfTheTransaction)); // to dobi en drugi
         if (total > amount) {
-            outputs.add(new TransactionOutput(senderPublicKey, total - amount, UUID.randomUUID().toString())); // Change
+            outputs.add(new TransactionOutput(senderPublicKey, total - amount, idOfTheTransaction)); // ostanek dobim jst
         }
 
         // Create and return the transaction
-        return new Transaction(senderPublicKey, recipientPublicKey, amount, inputs, outputs);
+        Transaction transaction = new Transaction(senderPublicKey, recipientPublicKey, amount, inputs, outputs,idOfTheTransaction);
+
+        for (TransactionOutput output : outputs) {
+            utxoPool.addUTXO(output);
+        }
+
+        return transaction;
+
     }
 
     private void broadcastTransaction(Transaction transaction) {

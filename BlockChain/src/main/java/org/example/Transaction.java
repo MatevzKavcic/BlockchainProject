@@ -1,4 +1,9 @@
 package org.example;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 public class Transaction {
@@ -9,13 +14,13 @@ public class Transaction {
     private String recipient; // Public key of the recipient
     private double amount; // Total amount being transferred
 
-    public Transaction(String sender, String recipient, double amount, List<TransactionInput> inputs, List<TransactionOutput> outputs) {
+    public Transaction(String sender, String recipient, double amount, List<TransactionInput> inputs, List<TransactionOutput> outputs,String transactionId) {
         this.sender = sender;
         this.recipient = recipient;
         this.amount = amount;
         this.inputs = inputs;
         this.outputs = outputs;
-        this.transactionId = calculateHash();
+        this.transactionId = transactionId;
     }
 
     private String calculateHash() {
@@ -94,5 +99,17 @@ public class Transaction {
 
     public void setAmount(double amount) {
         this.amount = amount;
+    }
+
+
+    public PublicKey stringToPublicKey(String key) throws Exception {
+        byte[] keyBytes = Base64.getDecoder().decode(key);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(spec);
+    }
+
+    public static String publicKeyToString(PublicKey publicKey) {
+        return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
 }

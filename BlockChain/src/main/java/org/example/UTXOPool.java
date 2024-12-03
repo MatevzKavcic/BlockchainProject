@@ -28,6 +28,13 @@ public class UTXOPool {
         }
     }
 
+    public double getMyTotalFunds(String myPublicKey) {
+        return UTXOPool.values().stream()
+                .filter(output -> output.isMine(myPublicKey))  // Only select UTXOs belonging to the specified public key
+                .mapToDouble(TransactionOutput::getAmount)  // Sum the amounts of those UTXOs
+                .sum();
+    }
+
 
     public void addUTXO(TransactionOutput output) {
         UTXOPool.put(output.getId(), output);

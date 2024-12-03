@@ -1,6 +1,5 @@
 package org.example;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,6 +25,13 @@ public class UTXOPool {
         for (TransactionOutput output : transaction.getOutputs()) {
             UTXOPool.put(output.getId(), output);
         }
+    }
+
+    public double getMyTotalFunds(String myPublicKey) {
+        return UTXOPool.values().stream()
+                .filter(output -> output.isMine(myPublicKey))  // Only select UTXOs belonging to the specified public key
+                .mapToDouble(TransactionOutput::getAmount)  // Sum the amounts of those UTXOs
+                .sum();
     }
 
 
