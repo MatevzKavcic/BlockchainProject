@@ -1,5 +1,6 @@
 package org.example;
 
+import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,16 +9,24 @@ public class Blockchain {
 
     private UTXOPool UTXOPool ;
 
+
     public Blockchain(UTXOPool UTXOPool) {
         chain = new ArrayList<>();
         // Add the genesis block
         chain.add(createGenesisBlock());
         this.UTXOPool = UTXOPool;
-
     }
 
     private Block createGenesisBlock() {
         return new Block(0, System.currentTimeMillis(), new ArrayList<>(), "0");
+    }
+
+    public UTXOPool getUTXOPool() {
+        return UTXOPool;
+    }
+
+    public void setUTXOPool(UTXOPool UTXOPool) {
+        this.UTXOPool = UTXOPool;
     }
 
     public Block getLatestBlock() {
@@ -27,9 +36,6 @@ public class Blockchain {
     public void addBlock(Block newBlock) {
         newBlock.mineBlock(4); // Adjust difficulty as needed
         chain.add(newBlock);
-    }
-    public UTXOPool getUTXOPool() {
-        return UTXOPool;
     }
 
     public boolean isChainValid() {
@@ -53,5 +59,4 @@ public class Blockchain {
     public List<Block> getChain() {
         return chain;
     }
-
 }

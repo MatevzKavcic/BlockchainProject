@@ -25,7 +25,7 @@ public class Blockchain {
         return UTXOPool;
     }
 
-    public void setUTXOPool(org.example.UTXOPool UTXOPool) {
+    public void setUTXOPool(UTXOPool UTXOPool) {
         this.UTXOPool = UTXOPool;
     }
 
