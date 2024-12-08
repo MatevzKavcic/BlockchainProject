@@ -133,11 +133,11 @@ public class MessagingService extends Thread {
                     }
                     case REQUESTUTXOPOOL -> {
                         Logger.log("recived REQUESTUTXOPOOL message from : "+ sender, LogLevel.Status);
-
+                        transactionManager.sendUTXOPool(sender);
                     }
                     case RESPONSEUTXOPOOL->{
                         Logger.log("recived RESPONSE UTXOPOOL message from : "+ sender, LogLevel.Status);
-
+                        transactionManager.updateUTXOPool(messageObject.getBody());
                     }
                 }
 

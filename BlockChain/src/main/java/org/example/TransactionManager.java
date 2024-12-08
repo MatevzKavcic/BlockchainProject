@@ -130,9 +130,20 @@ public class TransactionManager extends Thread{
     }
     //method ki bo poslau v network prosnjo da se updejta UTXO pool tako da bojo dodali se njega.
 
-    public void updateUTXOPool(){
+    public void sendUTXOPool(PublicKey sendToPublicKey) {
+        String UTXOpoolString = gson.toJson(utxoPool);
 
+        Message m = new Message(MessageType.RESPONSEUTXOPOOL,UTXOpoolString,publicKeyToString(publicKey));
+        String mString = gson.toJson(m);
 
+        WriteMeThread thread = (WriteMeThread) connectedPeers.get(sendToPublicKey).getThread();
+
+        thread.sendMessage( mString);
+    }
+
+    public void updateUTXOPool(String UTXOPoolString){
+        utxoPool = gson.fromJson(UTXOPoolString,UTXOPool.class);
+        Logger.log("Updating Utxo pool",LogLevel.Success);
     }
 
 
