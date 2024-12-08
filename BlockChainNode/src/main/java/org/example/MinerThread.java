@@ -15,10 +15,13 @@ public class MinerThread extends Thread {
     private Random random; // Random generator for testing
     public Gson gson = new Gson();
 
-    public MinerThread(PublicKey publicKey, UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers) {
+    private TransactionPool transactionPool;
+
+    public MinerThread(PublicKey publicKey, UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, TransactionPool transactionPool) {
         this.publicKey = publicKey;
         this.utxoPool = utxoPool;
         this.connectedPeers = connectedPeers;
+        this.transactionPool = transactionPool;
         this.random = new Random();
         this.setName("Miner");
     }
@@ -30,19 +33,15 @@ public class MinerThread extends Thread {
                 // Sleep for 20 seconds
                 Thread.sleep(20000);
 
-
-
-                // to odkomentirej  ko bos posiljau trnasakcije zdej rabis samo za debugging.
-
                 // Create a random transaction
-               // Transaction transaction = createRandomTransaction();
-               // if (transaction != null) {
-               //     broadcastTransaction(transaction);
-               // } else {
-               //     System.out.println("Insufficient funds or no peers to send transaction.");
-               // }
+                Transaction transaction = createRandomTransaction();
+                if (transaction != null) {
+                    broadcastTransaction(transaction);
+                } else {
+                    System.out.println("Insufficient funds or no peers to send transaction.");
+                }
             } catch (InterruptedException e) {
-                System.out.println("MinerThread interrupted: " + e.getMessage());
+                Logger.log("MinerThread interrupted: " + e.getMessage());
                 break;
             }
         }
@@ -67,8 +66,9 @@ public class MinerThread extends Thread {
         String senderPublicKey = publicKeyToString(publicKey); // moj public key.
 
 
-        if (utxoPool.getMyTotalFunds(senderPublicKey) < amount) {
-            System.out.println("Insufficient funds for transaction. Needed: " + amount + ", Available: " + total);
+        double tmp  = utxoPool.getMyTotalFunds(senderPublicKey);
+        if ( tmp < amount) {
+            System.out.println("Insufficient funds for transaction. Needed: " + amount + ", Available: " + tmp);
             return null;
         }
         else {
@@ -118,10 +118,12 @@ public class MinerThread extends Thread {
         Message message = new Message(MessageType.TRANSACTION,transactionString,publicKeyToString(publicKey));
         String messageString = gson.toJson(message);
 
+        //send the transaction to everyone.
         for (PeerInfo peer : connectedPeers.values()) {
             WriteMeThread thread =(WriteMeThread) peer.getThread();
             thread.sendMessage(messageString);
         }
+
     }
 
 

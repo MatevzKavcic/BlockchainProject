@@ -2,6 +2,8 @@ package org.example;
 
 
 import com.google.gson.Gson;
+import util.LogLevel;
+import util.Logger;
 
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -26,14 +28,15 @@ public class TransactionManager extends Thread{
     private Random random; // Random generator for testing
     private Blockchain blockchain;
 
+    private TransactionPool transactionPool;
 
 
-
-    public TransactionManager(UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, Blockchain blockchain) {
+    public TransactionManager(UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, Blockchain blockchain, TransactionPool transactionPool) {
         this.utxoPool = utxoPool;
         this.connectedPeers = connectedPeers;
         this.publicKey = publicKey;
         this.blockchain = blockchain;
+        this.transactionPool = transactionPool;
         this.random = new Random();
         this.setName("transaction Mannager Thread");
 
@@ -41,83 +44,108 @@ public class TransactionManager extends Thread{
 
     public void run(){
 
+            //  vedno vprasas prvega na katerega se povezes. za zdej je uredi za debuging
+            synchronized (SharedResources.LOCK) {
 
-        // ce nimas blockchaina pol prasaj soseda
-        if (blockchain==null) {
+                // Wait until blockchain` is not null
+                try {
+                    // Wait until blockchain is not null AND connectedPeers is not empty
+                    while (connectedPeers.isEmpty()) {
+                        Logger.log("WAITING FOR A Updated connected peers");
+                        SharedResources.LOCK.wait();
+                    }
+                    Logger.log("NOT WAITING ANYMORE REQUESTING");
 
-            //TO IMPLEMENT:
-            // dokler nimas usaj 2 sosedov nesmes sodelovat....
-            // da ne vedno vprasas prvega na katerega se povezes. za zdej je uredi za debuging
+                    // When notified and conditions are met, send requests
+                    List<PublicKey> peerKeys = new ArrayList<>(connectedPeers.keySet());
+                    Random random = new Random();
+                    requestTransactionPool(peerKeys.get(random.nextInt(peerKeys.size())));
+                    requestUTXOPool(peerKeys.get(random.nextInt(peerKeys.size())));
+                    requestBlockchain(peerKeys.get(random.nextInt(peerKeys.size())));
 
-            while (!connectedPeers.isEmpty()) {
-                List<PublicKey> peerKeys = new ArrayList<>(connectedPeers.keySet());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
 
-                Random random = new Random();
-                requestBlockchain(peerKeys.get(random.nextInt(peerKeys.size())));
-
+                // If the blockchain, transactionPool, and UTXOPool are already available
+                Logger.log(transactionPool + "" + blockchain, LogLevel.Debug);
             }
         }
 
 
-        //requestThreadPool();
+    // to bo class ki booo na zacetku requestou blockchain
+    //oz bo requestau za thread pool in pol ko bo dobil kaksno transakcijo jo bo moral obbdelat in ja...
 
+    private void requestUTXOPool(PublicKey sendToPublicKey) {
 
-
-
-
-
-
-        // to bo class ki booo na zacetku requestou blockchain
-        //oz bo requestau za thread pool in pol ko bo dobil kaksno transakcijo jo bo moral obbdelat in ja...
-
-    }
-
-   /* private void requestThreadPool() {
-
-        Message m = new Message(MessageType.REQUESTTHREADPOOL,"",publicKeyToString(publicKey));
-        String mString = gson.toJson(m);
-
-        WriteMeThread thread = (WriteMeThread) connectedPeers.get(publicKey).getThread();
-
-        thread.sendMessage( mString);
-
-
-    }
-
-
-    */
-    public void requestBlockchain(PublicKey sendToPublicKey) {
-
-        //enega rendom peera dobi in poslji blockchainrequest.
-
-        Message m = new Message(MessageType.BLOCKCHAINREQUEST,"",publicKeyToString(publicKey));
+        Message m = new Message(MessageType.REQUESTUTXOPOOL,"",publicKeyToString(publicKey));
         String mString = gson.toJson(m);
 
         WriteMeThread thread = (WriteMeThread) connectedPeers.get(sendToPublicKey).getThread();
 
         thread.sendMessage( mString);
-
     }
 
-    //method ki bo poslau v network prosnjo da se updejta UTXO pool tako da bojo dodali se njega.
-    public void updateUTXOPool(){
+    private void requestTransactionPool(PublicKey sendToPublicKey) {
+
+    Message m = new Message(MessageType.REQUESTTRANSPOOL,"",publicKeyToString(publicKey));
+    String mString = gson.toJson(m);
+
+    WriteMeThread thread = (WriteMeThread) connectedPeers.get(sendToPublicKey).getThread();
+
+    thread.sendMessage( mString);
 
 
+}
+
+
+
+public void requestBlockchain(PublicKey sendToPublicKey) {
+
+    //enega rendom peera dobi in poslji blockchainrequest.
+
+    Message m = new Message(MessageType.BLOCKCHAINREQUEST,"",publicKeyToString(publicKey));
+    String mString = gson.toJson(m);
+
+    WriteMeThread thread = (WriteMeThread) connectedPeers.get(sendToPublicKey).getThread();
+
+    thread.sendMessage( mString);
+
+}
+
+//method ki bo poslau v network prosnjo da se updejta UTXO pool tako da bojo dodali se njega.
+public void updateUTXOPool(){
+
+
+}
+
+
+
+public PublicKey stringToPublicKey(String key) throws Exception {
+    byte[] keyBytes = Base64.getDecoder().decode(key);
+    X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+    return keyFactory.generatePublic(spec);
+}
+
+public static String publicKeyToString(PublicKey publicKey) {
+    return Base64.getEncoder().encodeToString(publicKey.getEncoded());
+}
+
+    public void sendTransactionPool(PublicKey sendToPublicKey) {
+        String transPoolString = gson.toJson(transactionPool);
+
+        Message m = new Message(MessageType.RESPONSETRANSPOOL,transPoolString,publicKeyToString(publicKey));
+        String mString = gson.toJson(m);
+
+        WriteMeThread thread = (WriteMeThread) connectedPeers.get(sendToPublicKey).getThread();
+
+        thread.sendMessage( mString);
     }
 
-
-
-    public PublicKey stringToPublicKey(String key) throws Exception {
-        byte[] keyBytes = Base64.getDecoder().decode(key);
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePublic(spec);
+    public void updateTransactionPool(String transactionPoolString) {
+        transactionPool=gson.fromJson(transactionPoolString,TransactionPool.class);
     }
-
-    public static String publicKeyToString(PublicKey publicKey) {
-        return Base64.getEncoder().encodeToString(publicKey.getEncoded());
-    }
-
-
 }
 

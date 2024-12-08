@@ -121,18 +121,6 @@ public class Server extends Thread{
         //sendUTXOPool(out,gson);
     }
 
-    private void sendUTXOPool(PrintWriter out, Gson gson) {
-        Message utxoPool = new Message(MessageType.UTXOPOOLINITIALIZATION,gson.toJson(UTXOPool),publicKeyToString(publicKey));
-        String utxoPoolString = gson.toJson(utxoPool);
-        out.println(utxoPoolString);
-    }
-
-
-    private void sendBlockchain(PrintWriter out,Gson gson) {
-        Message blockchainRequest = new Message(MessageType.BLOCKCHAINITIALIZE,gson.toJson(blockchain),publicKeyToString(publicKey));
-        String blockchainRequestString = gson.toJson(blockchainRequest);
-        out.println(blockchainRequestString);
-    }
 
     // metoda ki poslje array portov na katere se mora peer povezat. to naredi kinda se mi zdi
     private void sendListToPeer(Gson gson,WriteMeThread writeMeThread) {

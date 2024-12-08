@@ -88,13 +88,16 @@ public class MessagingService extends Thread {
                         PeerInfo peerInfo = connectedPeers.get(sender);
 
                         WriteMeThread thread = (WriteMeThread) peerInfo.getThread();
-                        Message m = new Message(MessageType.BLOCKCHAINRESPONSE,gson.toJson(blockchain),publicKeyToString(publicKey));
+                        String pkString = publicKeyToString(publicKey);
+                        Message m = new Message(MessageType.BLOCKCHAINRESPONSE,gson.toJson(blockchain), pkString);
                         String mString = gson.toJson(m);
                         thread.sendMessage( mString);
                     }
                     case BLOCKCHAINRESPONSE -> {
                         blockchain = gson.fromJson(messageObject.getBody(), Blockchain.class);//string zs blockchainBody
-
+                        synchronized (SharedResources.LOCK) {
+                            notifyUpdates();
+                        }
                     }
 
                     // if you get this block it means that you just connected to a network and the node you connected to sent you this message.
@@ -116,29 +119,25 @@ public class MessagingService extends Thread {
 
                     }
 
-
                     case TRANSACTION -> {
-                      // Logger.log("Received a new transaction from: " + sender, LogLevel.Success);
+                        Logger.log("RECIEVED A NEW TRANSACTION FROM : ",LogLevel.Success);
 
-                      // // Parse the transaction from the message body
-                      // Transaction receivedTransaction = gson.fromJson(messageObject.getBody(), Transaction.class);
+                    }
+                    case REQUESTTRANSPOOL -> {
+                        Logger.log("recived REQTRANSPOOL message from : ", LogLevel.Status);
+                        transactionManager.sendTransactionPool(sender);
+                    }
+                    case RESPONSETRANSPOOL ->{
+                        Logger.log("recived RESPONSE TRANSPOOL message from : ", LogLevel.Status);
+                        transactionManager.updateTransactionPool(messageObject.getBody());
+                    }
+                    case REQUESTUTXOPOOL -> {
+                        Logger.log("recived REQUESTUTXOPOOL message from : "+ sender, LogLevel.Status);
 
-                      // // Step 1: Verify the transaction (signatures, inputs, etc.)
-                      // boolean isValid = verifyTransaction(receivedTransaction);
+                    }
+                    case RESPONSEUTXOPOOL->{
+                        Logger.log("recived RESPONSE UTXOPOOL message from : "+ sender, LogLevel.Status);
 
-                      // if (!isValid) {
-                      //     Logger.log("Invalid transaction from: " + sender, LogLevel.Warn);
-                      //     return; // Discard the invalid transaction
-                      // }
-
-                      // // Step 2: Update UTXO pool
-                      // updateUTXOPool(receivedTransaction);
-
-                      // // Step 3: Add the transaction to the mempool or handle it further
-                      // // For now, let's assume we're adding it to the mempool or just logging it
-                      // addTransactionToMempool(receivedTransaction);
-
-                      // Logger.log("Transaction added successfully.", LogLevel.Info);
                     }
                 }
 
@@ -153,7 +152,6 @@ public class MessagingService extends Thread {
             throw new RuntimeException(e);
         }
     }
-
     public PublicKey stringToPublicKey(String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
@@ -163,5 +161,12 @@ public class MessagingService extends Thread {
 
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+    public synchronized void notifyUpdates() {
+        synchronized (SharedResources.LOCK) {
+            SharedResources.LOCK.notifyAll(); // Notify all waiting threads
+            Logger.log("Updating threads");
+        }
+
     }
 }

@@ -1,14 +1,14 @@
 package org.example;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class TransactionPool {
-    private HashMap<String, Transaction> transactionPool;
+    private ConcurrentHashMap<String, Transaction> transactionPool;
 
     public TransactionPool() {
-        this.transactionPool = new HashMap<>();
+        transactionPool = new ConcurrentHashMap<>();
     }
 
     public void addTransaction(Transaction transaction) {

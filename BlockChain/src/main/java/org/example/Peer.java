@@ -49,13 +49,15 @@ public class Peer extends Thread {
             Blockchain blockchain = new Blockchain(UTXOPool);
 
             blockchain.addGenesisBlock(keyGenerator.getPublicKey());
+            TransactionPool transactionPool = new TransactionPool();
 
-            TransactionManager transactionManager = new TransactionManager(UTXOPool,connectedPeers, keyGenerator.getPublicKey(),blockchain);
+            TransactionManager transactionManager = new TransactionManager(UTXOPool,connectedPeers, keyGenerator.getPublicKey(),blockchain,transactionPool);
+            transactionManager.start();
 
             MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool,transactionManager);
             messagingServiceThread.start();
 
-            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(), UTXOPool,connectedPeers);
+            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(), UTXOPool,connectedPeers,transactionPool);
             minerThread.start();
 
             if (firstNode) {

@@ -95,7 +95,7 @@ public class MessagingService extends Thread {
                     }
                     case BLOCKCHAINRESPONSE -> {
                         blockchain = gson.fromJson(messageObject.getBody(), Blockchain.class);//string zs blockchainBody
-
+                        notifyUpdates();
                     }
 
                     // if you get this block it means that you just connected to a network and the node you connected to sent you this message.
@@ -119,7 +119,23 @@ public class MessagingService extends Thread {
 
 
                     case TRANSACTION -> {
-                    Logger.log("RECIEVED A NEW TRANSACTION FROM : "+ sender,LogLevel.Success);
+                    Logger.log("RECIEVED A NEW TRANSACTION FROM : ",LogLevel.Success);
+
+                    }
+                    case REQUESTTRANSPOOL -> {
+                        Logger.log("recived REQTRANSPOOL message from : ", LogLevel.Status);
+                        transactionManager.sendTransactionPool(sender);
+                    }
+                    case RESPONSETRANSPOOL ->{
+                        Logger.log("recived RESPONSE TRANSPOOL message from : ", LogLevel.Status);
+                        transactionManager.updateTransactionPool(messageObject.getBody());
+                    }
+                    case REQUESTUTXOPOOL -> {
+                        Logger.log("recived REQUESTUTXOPOOL message from : "+ sender, LogLevel.Status);
+
+                    }
+                    case RESPONSEUTXOPOOL->{
+                        Logger.log("recived RESPONSE UTXOPOOL message from : "+ sender, LogLevel.Status);
 
                     }
                 }
@@ -135,6 +151,10 @@ public class MessagingService extends Thread {
             throw new RuntimeException(e);
         }
     }
+
+    private void sendTransactionPool() {
+    }
+
     public PublicKey stringToPublicKey(String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
@@ -144,5 +164,8 @@ public class MessagingService extends Thread {
 
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+    public synchronized void notifyUpdates() {
+        notifyAll(); // Notify all waiting threads
     }
 }

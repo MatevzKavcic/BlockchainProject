@@ -115,8 +115,10 @@ public class Client extends Thread{
 
         // Store the client's information in connectedPeers
         //it stores the publicKey and the peers socket and the writemeThread;
-        connectedPeers.put(serverPublicKey, peerInfo);
-
+        synchronized (SharedResources.LOCK) {
+            connectedPeers.put(serverPublicKey, peerInfo);
+            notifyUpdates();
+        }
         //Logger.log("new connection :  ");
         //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
         //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
@@ -205,5 +207,11 @@ public class Client extends Thread{
 
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+    public synchronized void notifyUpdates() {
+        synchronized (SharedResources.LOCK) {
+            SharedResources.LOCK.notifyAll(); // Notify all waiting threads
+            Logger.log("Updating threads");
+        }
     }
 }
