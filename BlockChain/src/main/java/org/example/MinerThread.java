@@ -36,8 +36,12 @@ public class MinerThread extends Thread {
 
                 // Create a random transaction
                 Transaction transaction = createRandomTransaction();
+                boolean tmp = transaction.validateTransaction(utxoPool);
+                Logger.log("transaction validation : " + tmp , LogLevel.Info);
+
                 if (transaction != null) {
                     broadcastTransaction(transaction);
+                    transactionPool.addTransaction(transaction);
                 } else {
                     System.out.println("Insufficient funds or no peers to send transaction.");
                 }

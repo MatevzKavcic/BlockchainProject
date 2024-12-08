@@ -53,7 +53,9 @@ public class UTXOPool {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        int tmp = getUTXOPool().size();
         sb.append("UTXOPool:\n");
+        sb.append("size :"+tmp+"\n");
         for (Map.Entry<String, TransactionOutput> entry : UTXOPool.entrySet()) {
             sb.append("Key: ").append(entry.getKey())
                     .append(", Value: ").append(entry.getValue().toString())

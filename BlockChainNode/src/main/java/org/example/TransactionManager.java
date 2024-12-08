@@ -71,8 +71,27 @@ public class TransactionManager extends Thread{
                 // If the blockchain, transactionPool, and UTXOPool are already available
                 Logger.log(transactionPool + "" + blockchain, LogLevel.Debug);
             }
+
         }
 
+    public void validateNewTransaction(Transaction transaction) {
+        if (utxoPool == null) {
+            Logger.log("UTXOpool is null, cannot validate transaction", LogLevel.Error);
+            return;
+        }
+
+        Logger.log("Validating transaction: " + transaction, LogLevel.Debug);
+
+        boolean isValid = transaction.validateTransaction(utxoPool);
+
+        if (isValid) {
+            Logger.log("Transaction is valid, adding to the transaction pool.", LogLevel.Success);
+            utxoPool.updateUTXOPool(transaction);
+            transactionPool.addTransaction(transaction); // Assuming `TransactionPool` has an `addTransaction` method
+        } else {
+            Logger.log("Transaction validation failed.", LogLevel.Error);
+        }
+    }
 
     // to bo class ki booo na zacetku requestou blockchain
     //oz bo requestau za thread pool in pol ko bo dobil kaksno transakcijo jo bo moral obbdelat in ja...
@@ -126,6 +145,7 @@ public void requestBlockchain(PublicKey sendToPublicKey) {
     }
 
     public void updateUTXOPool(String UTXOPoolString){
+        Logger.log(UTXOPoolString);
         utxoPool = gson.fromJson(UTXOPoolString,UTXOPool.class);
         Logger.log("Updating Utxo pool",LogLevel.Success);
     }
@@ -154,8 +174,9 @@ public static String publicKeyToString(PublicKey publicKey) {
     }
 
     public void updateTransactionPool(String transactionPoolString) {
+
         transactionPool=gson.fromJson(transactionPoolString,TransactionPool.class);
-        Logger.log("Updating Transaction pool", LogLevel.Success);
+        Logger.log("Updating Transaction pool" , LogLevel.Success);
 
     }
 }

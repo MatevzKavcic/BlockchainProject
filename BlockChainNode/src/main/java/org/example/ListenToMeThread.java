@@ -25,7 +25,6 @@ public class ListenToMeThread implements Runnable {
         try {
             String message;
             while ((message = in.readLine()) != null) {
-                System.out.println("Server recived message : " + message + " from socket "+ socket.getPort());
                 messageQueue.put(message); // Add message to queue
             }
         } catch (Exception e) {

@@ -37,6 +37,7 @@ public class MinerThread extends Thread {
                 Transaction transaction = createRandomTransaction();
                 if (transaction != null) {
                     broadcastTransaction(transaction);
+                    transactionPool.addTransaction(transaction);
                 } else {
                     System.out.println("Insufficient funds or no peers to send transaction.");
                 }

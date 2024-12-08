@@ -1,5 +1,8 @@
 package org.example;
 
+import util.LogLevel;
+import util.Logger;
+
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -13,7 +16,9 @@ public class TransactionPool {
 
     public void addTransaction(Transaction transaction) {
         transactionPool.put(transaction.getTransactionId(), transaction);
+        Logger.log("transaction added to the pool", LogLevel.Success);
     }
+
 
     public List<Transaction> getTransactionsForBlock(int maxCount) {
         List<Transaction> selectedTransactions = transactionPool.values()

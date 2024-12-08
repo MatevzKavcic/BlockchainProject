@@ -82,6 +82,7 @@ public class MessagingService extends Thread {
 
                         }
                     }
+
                     case PEERLISTRETURN -> {
                     }
                     case BLOCKCHAINREQUEST -> {
@@ -121,6 +122,11 @@ public class MessagingService extends Thread {
                     case TRANSACTION -> {
                     Logger.log("RECIEVED A NEW TRANSACTION FROM : ",LogLevel.Success);
 
+                    if (utxoPool==null){
+                        Logger.log("UTXOpool is null, cannot continue");
+                    }
+                        Transaction transaction = gson.fromJson(messageObject.getBody(),Transaction.class);
+                        transactionManager.validateNewTransaction(transaction);
                     }
                     case REQUESTTRANSPOOL -> {
                         Logger.log("recived REQTRANSPOOL message from : ", LogLevel.Status);

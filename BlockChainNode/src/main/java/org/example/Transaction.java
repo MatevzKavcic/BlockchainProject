@@ -1,4 +1,7 @@
 package org.example;
+import util.LogLevel;
+import util.Logger;
+
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
@@ -29,25 +32,45 @@ public class Transaction {
 
     public boolean validateTransaction(UTXOPool utxoPool) {
         double inputSum = 0;
+        double outputSum = 0;
 
-        // Verify inputs are valid
+        Logger.log(utxoPool.toString());
+
+        // Validate inputs
         for (TransactionInput input : inputs) {
+            // Find the corresponding UTXO
             TransactionOutput UTXO = utxoPool.getUTXOPool().get(input.getTransactionOutputId());
-            if (UTXO == null || !UTXO.isMine(sender)) {
-                return false; // Input is invalid or not owned by the sender
+            if (UTXO == null) {
+                Logger.log("UTXO not found for input: " + input.getTransactionOutputId(), LogLevel.Error);
+                return false; // UTXO does not exist
             }
-            input.setUTXO(UTXO); // Attach the UTXO to the input
+            if (!UTXO.isMine(sender)) {
+                Logger.log("UTXO is not owned by sender: " + sender, LogLevel.Error);
+                return false; // UTXO is not owned by the sender
+            }
+
+            // Attach the UTXO to the input for later reference
+            input.setUTXO(UTXO);
+
+
+            // Sum up the input values
             inputSum += UTXO.getAmount();
         }
 
-        // Ensure the sender has sufficient funds
+        // Validate sufficient balance
         if (inputSum < amount) {
-            return false; // Insufficient balance
+            Logger.log("Insufficient balance. Input sum: " + inputSum + ", required: " + amount, LogLevel.Error);
+            return false;
         }
 
-        // Outputs must not exceed the inputs
-        double outputSum = outputs.stream().mapToDouble(TransactionOutput::getAmount).sum();
-        return inputSum == outputSum;
+        // Validate outputs
+        outputSum = outputs.stream().mapToDouble(TransactionOutput::getAmount).sum();
+        if (inputSum != outputSum) {
+            Logger.log("Input sum does not match output sum. Input sum: " + inputSum + ", output sum: " + outputSum, LogLevel.Error);
+            return false; // The transaction does not balance
+        }
+
+        return true; // Transaction is valid
     }
 
 

@@ -75,6 +75,24 @@ public class TransactionManager extends Thread{
     }
 
     // to bo class ki booo na zacetku requestou blockchain
+    public void validateNewTransaction(Transaction transaction) {
+        if (utxoPool == null) {
+            Logger.log("UTXOpool is null, cannot validate transaction", LogLevel.Error);
+            return;
+        }
+
+        Logger.log("Validating transaction: " + transaction, LogLevel.Debug);
+
+        boolean isValid = transaction.validateTransaction(utxoPool);
+
+        if (isValid) {
+            Logger.log("Transaction is valid, adding to the transaction pool.", LogLevel.Success);
+            transactionPool.addTransaction(transaction); // Assuming `TransactionPool` has an `addTransaction` method
+        } else {
+            Logger.log("Transaction validation failed.", LogLevel.Error);
+        }
+    }
+
     //oz bo requestau za thread pool in pol ko bo dobil kaksno transakcijo jo bo moral obbdelat in ja...
 
     private void requestUTXOPool(PublicKey sendToPublicKey) {
@@ -115,7 +133,6 @@ public class TransactionManager extends Thread{
         transactionPool=gson.fromJson(transactionPoolString,TransactionPool.class);
     }
 
-
     public void requestBlockchain(PublicKey sendToPublicKey) {
 
         //enega rendom peera dobi in poslji blockchainrequest.
@@ -128,6 +145,7 @@ public class TransactionManager extends Thread{
         thread.sendMessage( mString);
 
     }
+
     //method ki bo poslau v network prosnjo da se updejta UTXO pool tako da bojo dodali se njega.
 
     public void sendUTXOPool(PublicKey sendToPublicKey) {
@@ -158,6 +176,6 @@ public class TransactionManager extends Thread{
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
-
 }
+
 

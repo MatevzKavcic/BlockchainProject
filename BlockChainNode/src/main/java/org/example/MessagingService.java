@@ -122,6 +122,12 @@ public class MessagingService extends Thread {
                     case TRANSACTION -> {
                         Logger.log("RECIEVED A NEW TRANSACTION FROM : ",LogLevel.Success);
 
+                        if (utxoPool==null){
+                            Logger.log("UTXOpool is null, cannot continue");
+                        }
+                        Transaction transaction = gson.fromJson(messageObject.getBody(),Transaction.class);
+                        transactionManager.validateNewTransaction(transaction);
+
                     }
                     case REQUESTTRANSPOOL -> {
                         Logger.log("recived REQTRANSPOOL message from : ", LogLevel.Status);
@@ -132,13 +138,13 @@ public class MessagingService extends Thread {
                         transactionManager.updateTransactionPool(messageObject.getBody());
                     }
                     case REQUESTUTXOPOOL -> {
-                        Logger.log("recived REQUESTUTXOPOOL message from : "+ sender, LogLevel.Status);
+                        Logger.log("recived REQUESTUTXOPOOL message from : ", LogLevel.Status);
                         transactionManager.sendUTXOPool(sender);
                     }
                     case RESPONSEUTXOPOOL->{
-                        Logger.log("recived RESPONSE UTXOPOOL message from : "+ sender, LogLevel.Status);
+                        Logger.log("recived RESPONSE UTXOPOOL message from : "+ messageObject.getBody(), LogLevel.Status);
                         transactionManager.updateUTXOPool(messageObject.getBody());
-                    }
+                        }
                 }
 
 
