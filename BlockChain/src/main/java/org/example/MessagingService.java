@@ -12,6 +12,7 @@ import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,7 +22,11 @@ public class MessagingService extends Thread {
 
     public Blockchain blockchain;
 
-    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, String hostName, int portNumber, PublicKey publicKey, PrivateKey privateKey,Blockchain blockchain) {
+    private UTXOPool utxoPool;
+
+    private TransactionManager transactionManager;
+
+    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, String hostName, int portNumber, PublicKey publicKey, PrivateKey privateKey, Blockchain blockchain, UTXOPool utxoPool, TransactionManager transactionManager) {
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
         this.hostName = hostName;
@@ -29,6 +34,9 @@ public class MessagingService extends Thread {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.blockchain  = blockchain;
+        this.utxoPool = utxoPool;
+        this.transactionManager = transactionManager;
+        this.setName("Messaging service Thread");
     }
 
     String hostName;
@@ -40,6 +48,7 @@ public class MessagingService extends Thread {
 
 
     Gson gson = new Gson();
+
 
 
     @Override
@@ -54,10 +63,8 @@ public class MessagingService extends Thread {
 
                 Message messageObject = gson.fromJson(message,Message.class);
 
-                Logger.log(blockchain+"", LogLevel.Success);
-
-
                 PublicKey sender  = stringToPublicKey(messageObject.getPublicKey()) ;
+                String senderName = generateNameFromPublicKey(messageObject.getPublicKey());
                 switch (messageObject.getHeader()) {
                     case HANDSHAKE -> {
                     }
@@ -83,17 +90,63 @@ public class MessagingService extends Thread {
                         PeerInfo peerInfo = connectedPeers.get(sender);
 
                         WriteMeThread thread = (WriteMeThread) peerInfo.getThread();
-                        Message m = new Message(MessageType.BLOCKCHAINRESPONSE,gson.toJson(blockchain),publicKeyToString(publicKey));
+                        String pkString = publicKeyToString(publicKey);
+                        Message m = new Message(MessageType.BLOCKCHAINRESPONSE,gson.toJson(blockchain), pkString);
                         String mString = gson.toJson(m);
                         thread.sendMessage( mString);
                     }
                     case BLOCKCHAINRESPONSE -> {
                         blockchain = gson.fromJson(messageObject.getBody(), Blockchain.class);//string zs blockchainBody
+                        synchronized (SharedResources.LOCK) {
+                            notifyUpdates();
+                        }
                     }
 
                     // if you get this block it means that you just connected to a network and the node you connected to sent you this message.
+                    case BLOCKCHAINSEND -> {
+                    }
                     case BLOCKCHAINITIALIZE -> {
                         blockchain = gson.fromJson(messageObject.getBody(), Blockchain.class);//string zs blockchainBody
+
+                        utxoPool= blockchain.getUTXOPool();
+                        Logger.log(blockchain.getUTXOPool().toString() ,LogLevel.Warn);
+
+                    }
+
+
+                    case UTXOPOOLINITIALIZATION -> {
+                        utxoPool= gson.fromJson(messageObject.getBody(), UTXOPool.class);
+
+                        Logger.log(blockchain.getUTXOPool().toString() ,LogLevel.Warn);
+
+                    }
+
+                    case TRANSACTION -> {
+                        Logger.log("RECIEVED A NEW TRANSACTION FROM : "+ senderName,LogLevel.Success);
+
+                        if (utxoPool==null){
+                            Logger.log("UTXOpool is null, cannot continue");
+                        }
+
+                        Transaction transaction = gson.fromJson(messageObject.getBody(),Transaction.class);
+                        transactionManager.validateNewTransaction(transaction);
+
+                    }
+                    case REQUESTTRANSPOOL -> {
+                        Logger.log("recived REQTRANSPOOL message from : "+ senderName, LogLevel.Status);
+                        transactionManager.sendTransactionPool(sender);
+                    }
+                    case RESPONSETRANSPOOL ->{
+                        Logger.log("recived RESPONSE TRANSPOOL message from : "+ senderName, LogLevel.Status);
+                        transactionManager.updateTransactionPool(messageObject.getBody());
+                    }
+                    case REQUESTUTXOPOOL -> {
+                        Logger.log("recived REQUESTUTXOPOOL message from : "+ senderName, LogLevel.Status);
+                        transactionManager.sendUTXOPool(sender);
+                    }
+                    case RESPONSEUTXOPOOL->{
+                        Logger.log("recived RESPONSE UTXOPOOL message from : "+ senderName+ messageObject.getBody(), LogLevel.Status);
+                        transactionManager.updateUTXOPool(messageObject.getBody());
                     }
                 }
 
@@ -117,5 +170,18 @@ public class MessagingService extends Thread {
 
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+    public static String generateNameFromPublicKey(String publicKey) {
+        // Generate a UUID based on the public key hash
+        UUID uuid = UUID.nameUUIDFromBytes(publicKey.getBytes());
+        return uuid.toString().split("-")[0]; // Use the first part for brevity
+    }
+
+    public synchronized void notifyUpdates() {
+        synchronized (SharedResources.LOCK) {
+            SharedResources.LOCK.notifyAll(); // Notify all waiting threads
+            Logger.log("Updating threads");
+        }
+
     }
 }

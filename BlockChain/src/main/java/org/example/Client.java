@@ -29,10 +29,11 @@ public class Client extends Thread{
     private int connectToPort;
 
     boolean isSpecial = false;
+    public TransactionManager transactionManager;
 
 
 
-    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort) {
+    public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,TransactionManager transactionManager) {
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.messageQueue = messageQueue;
@@ -40,6 +41,8 @@ public class Client extends Thread{
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.connectToPort = connectToPort;
+        this.transactionManager = transactionManager;
+        this.setName("Primary Client Thread");
     }
     public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,boolean isSpecial) {
         this.hostName = hostName;
@@ -50,6 +53,7 @@ public class Client extends Thread{
         this.privateKey = privateKey;
         this.connectToPort = connectToPort;
         this.isSpecial= isSpecial;
+        this.setName("Secondary client Thread" + connectedPeers.size());
     }
 
     @Override
@@ -111,8 +115,10 @@ public class Client extends Thread{
 
         // Store the client's information in connectedPeers
         //it stores the publicKey and the peers socket and the writemeThread;
-        connectedPeers.put(serverPublicKey, peerInfo);
-
+        synchronized (SharedResources.LOCK) {
+            connectedPeers.put(serverPublicKey, peerInfo);
+            notifyUpdates();
+        }
         //Logger.log("new connection :  ");
         //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
         //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
@@ -126,6 +132,9 @@ public class Client extends Thread{
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
+
+        transactionManager.requestBlockchain(serverPublicKey);
+
     }
 
     // Method to handle messages from the server
@@ -182,6 +191,8 @@ public class Client extends Thread{
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
 
+        //na koncu nesmes requestat za blockchain ker ga ze mas od prevega node ko se povezes.
+
     }
 
 
@@ -196,5 +207,11 @@ public class Client extends Thread{
 
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+    public synchronized void notifyUpdates() {
+        synchronized (SharedResources.LOCK) {
+            SharedResources.LOCK.notifyAll(); // Notify all waiting threads
+            Logger.log("Updating threads");
+        }
     }
 }
