@@ -30,7 +30,7 @@ public class Blockchain {
         Transaction genesisTransaction = new Transaction(
                 "GENESIS", // Sender is a placeholder
                 publicKeyToString(publicKey),
-                100.0,
+                100,
                 new ArrayList<>(), // No inputs for the genesis transaction
                 outputs,
                 "GENESIS TRANSACTION"

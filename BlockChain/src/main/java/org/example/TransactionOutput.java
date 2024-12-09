@@ -3,10 +3,10 @@ package org.example;
 public class TransactionOutput {
     private String id; // Unique identifier for this output
     private String recipient; // The public key (or address) of the recipient
-    private double amount; // The amount this output is worth
+    private int amount; // The amount this output is worth
     private String parentTransactionId; // ID of the transaction this output was created in
 
-    public TransactionOutput(String recipient, double amount, String parentTransactionId) {
+    public TransactionOutput(String recipient, int amount, String parentTransactionId) {
         this.recipient = recipient;
         this.amount = amount;
         this.parentTransactionId = parentTransactionId;
@@ -36,11 +36,11 @@ public class TransactionOutput {
         this.recipient = recipient;
     }
 
-    public double getAmount() {
+    public int getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(int amount) {
         this.amount = amount;
     }
 

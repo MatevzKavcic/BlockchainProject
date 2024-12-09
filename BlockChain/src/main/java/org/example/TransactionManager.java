@@ -8,10 +8,7 @@ import util.Logger;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TransactionManager extends Thread{
@@ -87,7 +84,9 @@ public class TransactionManager extends Thread{
 
         if (isValid) {
             Logger.log("Transaction is valid, adding to the transaction pool.", LogLevel.Success);
+            utxoPool.updateUTXOPool(transaction); // updajti se transaction pool
             transactionPool.addTransaction(transaction); // Assuming `TransactionPool` has an `addTransaction` method
+            logTransactionDetails(transaction);
         } else {
             Logger.log("Transaction validation failed.", LogLevel.Error);
         }
@@ -165,6 +164,24 @@ public class TransactionManager extends Thread{
     }
 
 
+    private void logTransactionDetails(Transaction transaction) {
+        // Get sender and recipient names
+        String senderName = generateNameFromPublicKey(transaction.getSender());
+        String recipientName = generateNameFromPublicKey(transaction.getRecipient());
+
+        // Log the transaction details
+        String transactionLog = String.format("%s --> %s %s of credit",
+                senderName, recipientName, transaction.getAmount());
+
+        Logger.log(transactionLog, LogLevel.Info);
+    }
+    public static String generateNameFromPublicKey(String publicKey) {
+        // Generate a UUID based on the public key hash
+        UUID uuid = UUID.nameUUIDFromBytes(publicKey.getBytes());
+        return uuid.toString().split("-")[0]; // Use the first part for brevity
+    }
+
+
 
     public PublicKey stringToPublicKey(String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);
@@ -176,6 +193,8 @@ public class TransactionManager extends Thread{
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
+
+
 }
 
 

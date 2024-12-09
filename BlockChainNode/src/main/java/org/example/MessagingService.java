@@ -12,6 +12,7 @@ import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -63,6 +64,7 @@ public class MessagingService extends Thread {
                 Message messageObject = gson.fromJson(message,Message.class);
 
                 PublicKey sender  = stringToPublicKey(messageObject.getPublicKey()) ;
+                String senderName = generateNameFromPublicKey(messageObject.getPublicKey());
                 switch (messageObject.getHeader()) {
                     case HANDSHAKE -> {
                     }
@@ -120,29 +122,30 @@ public class MessagingService extends Thread {
                     }
 
                     case TRANSACTION -> {
-                        Logger.log("RECIEVED A NEW TRANSACTION FROM : ",LogLevel.Success);
+                        Logger.log("RECIEVED A NEW TRANSACTION FROM : "+ senderName,LogLevel.Success);
 
                         if (utxoPool==null){
                             Logger.log("UTXOpool is null, cannot continue");
                         }
+
                         Transaction transaction = gson.fromJson(messageObject.getBody(),Transaction.class);
                         transactionManager.validateNewTransaction(transaction);
 
                     }
                     case REQUESTTRANSPOOL -> {
-                        Logger.log("recived REQTRANSPOOL message from : ", LogLevel.Status);
+                        Logger.log("recived REQTRANSPOOL message from : "+ senderName, LogLevel.Status);
                         transactionManager.sendTransactionPool(sender);
                     }
                     case RESPONSETRANSPOOL ->{
-                        Logger.log("recived RESPONSE TRANSPOOL message from : ", LogLevel.Status);
+                        Logger.log("recived RESPONSE TRANSPOOL message from : "+ senderName, LogLevel.Status);
                         transactionManager.updateTransactionPool(messageObject.getBody());
                     }
                     case REQUESTUTXOPOOL -> {
-                        Logger.log("recived REQUESTUTXOPOOL message from : ", LogLevel.Status);
+                        Logger.log("recived REQUESTUTXOPOOL message from : "+ senderName, LogLevel.Status);
                         transactionManager.sendUTXOPool(sender);
                     }
                     case RESPONSEUTXOPOOL->{
-                        Logger.log("recived RESPONSE UTXOPOOL message from : "+ messageObject.getBody(), LogLevel.Status);
+                        Logger.log("recived RESPONSE UTXOPOOL message from : "+ senderName+ messageObject.getBody(), LogLevel.Status);
                         transactionManager.updateUTXOPool(messageObject.getBody());
                         }
                 }
@@ -168,6 +171,12 @@ public class MessagingService extends Thread {
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
+    public static String generateNameFromPublicKey(String publicKey) {
+        // Generate a UUID based on the public key hash
+        UUID uuid = UUID.nameUUIDFromBytes(publicKey.getBytes());
+        return uuid.toString().split("-")[0]; // Use the first part for brevity
+    }
+
     public synchronized void notifyUpdates() {
         synchronized (SharedResources.LOCK) {
             SharedResources.LOCK.notifyAll(); // Notify all waiting threads

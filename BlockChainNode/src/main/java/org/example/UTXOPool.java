@@ -1,5 +1,6 @@
 package org.example;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -12,11 +13,11 @@ public class UTXOPool {
     }
 
 
-    public Map<String, TransactionOutput> getUTXOPool() {
+    public synchronized Map<String, TransactionOutput> getUTXOPool() {
         return UTXOPool;
     }
 
-    public void updateUTXOPool(Transaction transaction) {
+    public synchronized void updateUTXOPool(Transaction transaction) {
         // Remove spent UTXOs
         for (TransactionInput input : transaction.getInputs()) {
             UTXOPool.remove(input.getTransactionOutputId());
@@ -27,35 +28,28 @@ public class UTXOPool {
         }
     }
 
-    public double getMyTotalFunds(String myPublicKey) {
+    public synchronized int getMyTotalFunds(String myPublicKey) {
         return UTXOPool.values().stream()
                 .filter(output -> output.isMine(myPublicKey))  // Only select UTXOs belonging to the specified public key
-                .mapToDouble(TransactionOutput::getAmount)  // Sum the amounts of those UTXOs
+                .mapToInt(TransactionOutput::getAmount)  // Sum the amounts of those UTXOs
                 .sum();
     }
 
 
-    public void addUTXO(TransactionOutput output) {
+    public synchronized void addUTXO(TransactionOutput output) {
         UTXOPool.put(output.getId(), output);
     }
 
     // Remove a UTXO from the pool
-    public void removeUTXO(String outputId) {
+    public synchronized void removeUTXO(String outputId) {
         UTXOPool.remove(outputId);
-    }
-
-    // Get all UTXOs
-    public Map<String, TransactionOutput> getUTXOs() {
-        return UTXOPool;
     }
 
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        int tmp = getUTXOPool().size();
         sb.append("UTXOPool:\n");
-        sb.append("size :"+tmp+"\n");
         for (Map.Entry<String, TransactionOutput> entry : UTXOPool.entrySet()) {
             sb.append("Key: ").append(entry.getKey())
                     .append(", Value: ").append(entry.getValue().toString())
@@ -63,5 +57,7 @@ public class UTXOPool {
         }
         return sb.toString();
     }
+
+
 
 }

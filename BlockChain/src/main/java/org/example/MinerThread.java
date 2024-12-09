@@ -36,15 +36,30 @@ public class MinerThread extends Thread {
 
                 // Create a random transaction
                 Transaction transaction = createRandomTransaction();
-                boolean tmp = transaction.validateTransaction(utxoPool);
-                Logger.log("transaction validation : " + tmp , LogLevel.Info);
+                if (transaction==null){
 
-                if (transaction != null) {
-                    broadcastTransaction(transaction);
-                    transactionPool.addTransaction(transaction);
-                } else {
-                    System.out.println("Insufficient funds or no peers to send transaction.");
                 }
+                else {
+                    boolean tmp = transaction.validateTransaction(utxoPool);
+                    if (tmp) {
+                        Logger.log("Transaction is valid.", LogLevel.Info);
+
+                        // Broadcast the transaction
+                        broadcastTransaction(transaction);
+
+                        // Update UTXOPool only after broadcasting
+                        utxoPool.updateUTXOPool(transaction);
+                        Logger.log("UTXOPool updated with transaction.", LogLevel.Success);
+
+
+                        // Add transaction to the pool
+                        transactionPool.addTransaction(transaction);
+                    } else {
+                        Logger.log("Transaction validation failed.", LogLevel.Error);
+                    }
+                }
+
+
             } catch (InterruptedException e) {
                 Logger.log("MinerThread interrupted: " + e.getMessage());
                 break;
@@ -54,66 +69,46 @@ public class MinerThread extends Thread {
 
     private Transaction createRandomTransaction() {
         // Get a random recipient from connected peers
-        if (connectedPeers.isEmpty()) return null; // No peers to send to
+        if (connectedPeers.isEmpty()) return null;
 
         List<PublicKey> peerKeys = new ArrayList<>(connectedPeers.keySet());
         PublicKey recipientKey = peerKeys.get(random.nextInt(peerKeys.size()));
         String recipientPublicKey = recipientKey.toString();
 
         // Random amount to send
-        double amount = random.nextDouble() * 10 + 1; // Between 1 and 10
+        int amount = random.nextInt(10) + 1;
 
         // Gather UTXOs to cover the amount
         List<TransactionInput> inputs = new ArrayList<>();
         List<TransactionOutput> outputs = new ArrayList<>();
-        double total = 0; // value kolko imam skupaj fundou
+        int total = 0;
 
-        String senderPublicKey = publicKeyToString(publicKey); // moj public key.
+        String senderPublicKey = publicKeyToString(publicKey);
 
-        double tmp  = utxoPool.getMyTotalFunds(senderPublicKey);
-        if ( tmp < amount) {
-            System.out.println("Insufficient funds for transaction. Needed: " + amount + ", Available: " + tmp);
+        if (utxoPool.getMyTotalFunds(senderPublicKey) < amount) {
+            Logger.log("Insufficient funds for transaction. Needed: " + amount);
             return null;
         }
-        else {
 
-            //ves da imas dovolj fundou in samo pobrisi tiste ko bos porabu
-            for (TransactionOutput output : utxoPool.getUTXOPool().values()) {
-
-                // dobi vse UTXO ki so moji
-                if (output.isMine(senderPublicKey)) {
-                    Logger.log("Imam kovancek vrednosti : ->" + output.getAmount() );
-                    inputs.add(new TransactionInput(output.getId()));
-                    total += output.getAmount();
-                    // ta output ki si ga sesteu skupaj ga moras odstet z poola in pol total-amount = now output
-                    utxoPool.removeUTXO(output.getId()); // Mark as spent
-                    if (total >= amount) {
-                        break;
-                    }
-                }
+        for (TransactionOutput output : utxoPool.getUTXOPool().values()) {
+            if (output.isMine(senderPublicKey)) {
+                inputs.add(new TransactionInput(output.getId()));
+                total += output.getAmount();
+                if (total >= amount) break;
             }
-
         }
 
+        if (total < amount) return null;
 
         // Create outputs
-        // nov output ki je unique vedno
-        String idOfTheTransaction = UUID.randomUUID().toString();
-
-        outputs.add(new TransactionOutput(recipientPublicKey, amount,idOfTheTransaction)); // to dobi en drugi
+        String transactionId = UUID.randomUUID().toString();
+        outputs.add(new TransactionOutput(recipientPublicKey, amount, transactionId));
         if (total > amount) {
-            outputs.add(new TransactionOutput(senderPublicKey, total - amount, idOfTheTransaction)); // ostanek dobim jst
+            outputs.add(new TransactionOutput(senderPublicKey, total - amount, transactionId));
         }
 
-        // Create and return the transaction
-        Transaction transaction = new Transaction(senderPublicKey, recipientPublicKey, amount, inputs, outputs,idOfTheTransaction);
-
-        for (TransactionOutput output : outputs) {
-            utxoPool.addUTXO(output);
-        }
-
-        return transaction;
-
+        // Return the transaction without modifying UTXOPool
+        return new Transaction(senderPublicKey, recipientPublicKey, amount, inputs, outputs, transactionId);
     }
 
     private void broadcastTransaction(Transaction transaction) {

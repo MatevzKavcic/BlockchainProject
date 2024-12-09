@@ -27,13 +27,10 @@ public class Blockchain {
         TransactionOutput genesisOutput = new TransactionOutput(publicKeyToString(publicKey),100,"GENESIS_TRANSACTION");
         outputs.add(genesisOutput);
 
-
-
-
         Transaction genesisTransaction = new Transaction(
                 "GENESIS", // Sender is a placeholder
                 publicKeyToString(publicKey),
-                100.0,
+                100,
                 new ArrayList<>(), // No inputs for the genesis transaction
                 outputs,
                 "GENESIS TRANSACTION"

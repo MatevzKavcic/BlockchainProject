@@ -2,7 +2,6 @@ package org.example;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -12,9 +11,9 @@ public class Transaction {
     private List<TransactionOutput> outputs; // New UTXOs being created
     private String sender; // Public key of the sender
     private String recipient; // Public key of the recipient
-    private double amount; // Total amount being transferred
+    private int amount; // Total amount being transferred
 
-    public Transaction(String sender, String recipient, double amount, List<TransactionInput> inputs, List<TransactionOutput> outputs,String transactionId) {
+    public Transaction(String sender, String recipient, int amount, List<TransactionInput> inputs, List<TransactionOutput> outputs, String transactionId) {
         this.sender = sender;
         this.recipient = recipient;
         this.amount = amount;
@@ -29,7 +28,7 @@ public class Transaction {
     }
 
     public boolean validateTransaction(UTXOPool utxoPool) {
-        double inputSum = 0;
+        int inputSum = 0;
 
         // Verify inputs are valid
         for (TransactionInput input : inputs) {
@@ -47,7 +46,7 @@ public class Transaction {
         }
 
         // Outputs must not exceed the inputs
-        double outputSum = outputs.stream().mapToDouble(TransactionOutput::getAmount).sum();
+        int outputSum = outputs.stream().mapToInt(TransactionOutput::getAmount).sum();
         return inputSum == outputSum;
     }
 
@@ -93,11 +92,11 @@ public class Transaction {
         this.recipient = recipient;
     }
 
-    public double getAmount() {
+    public int getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(int amount) {
         this.amount = amount;
     }
 

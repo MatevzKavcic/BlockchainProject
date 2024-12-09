@@ -1,7 +1,4 @@
 package org.example;
-import util.LogLevel;
-import util.Logger;
-
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
@@ -14,9 +11,9 @@ public class Transaction {
     private List<TransactionOutput> outputs; // New UTXOs being created
     private String sender; // Public key of the sender
     private String recipient; // Public key of the recipient
-    private double amount; // Total amount being transferred
+    private int amount; // Total amount being transferred
 
-    public Transaction(String sender, String recipient, double amount, List<TransactionInput> inputs, List<TransactionOutput> outputs, String transactionId) {
+    public Transaction(String sender, String recipient, int amount, List<TransactionInput> inputs, List<TransactionOutput> outputs, String transactionId) {
         this.sender = sender;
         this.recipient = recipient;
         this.amount = amount;
@@ -31,46 +28,26 @@ public class Transaction {
     }
 
     public boolean validateTransaction(UTXOPool utxoPool) {
-        double inputSum = 0;
-        double outputSum = 0;
+        int inputSum = 0;
 
-        Logger.log(utxoPool.toString());
-
-        // Validate inputs
+        // Verify inputs are valid
         for (TransactionInput input : inputs) {
-            // Find the corresponding UTXO
             TransactionOutput UTXO = utxoPool.getUTXOPool().get(input.getTransactionOutputId());
-            if (UTXO == null) {
-                Logger.log("UTXO not found for input: " + input.getTransactionOutputId(), LogLevel.Error);
-                return false; // UTXO does not exist
+            if (UTXO == null || !UTXO.isMine(sender)) {
+                return false; // Input is invalid or not owned by the sender
             }
-            if (!UTXO.isMine(sender)) {
-                Logger.log("UTXO is not owned by sender: " + sender, LogLevel.Error);
-                return false; // UTXO is not owned by the sender
-            }
-
-            // Attach the UTXO to the input for later reference
-            input.setUTXO(UTXO);
-
-
-            // Sum up the input values
+            input.setUTXO(UTXO); // Attach the UTXO to the input
             inputSum += UTXO.getAmount();
         }
 
-        // Validate sufficient balance
+        // Ensure the sender has sufficient funds
         if (inputSum < amount) {
-            Logger.log("Insufficient balance. Input sum: " + inputSum + ", required: " + amount, LogLevel.Error);
-            return false;
+            return false; // Insufficient balance
         }
 
-        // Validate outputs
-        outputSum = outputs.stream().mapToDouble(TransactionOutput::getAmount).sum();
-        if (inputSum != outputSum) {
-            Logger.log("Input sum does not match output sum. Input sum: " + inputSum + ", output sum: " + outputSum, LogLevel.Error);
-            return false; // The transaction does not balance
-        }
-
-        return true; // Transaction is valid
+        // Outputs must not exceed the inputs
+        int outputSum = outputs.stream().mapToInt(TransactionOutput::getAmount).sum();
+        return inputSum == outputSum;
     }
 
 
@@ -115,11 +92,11 @@ public class Transaction {
         this.recipient = recipient;
     }
 
-    public double getAmount() {
+    public int getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(int amount) {
         this.amount = amount;
     }
 
