@@ -29,7 +29,7 @@ public class TransactionManager extends Thread{
 
 
     public TransactionManager(UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, Blockchain blockchain, TransactionPool transactionPool) {
-        this.utxoPool = utxoPool;
+        this.utxoPool = UTXOPool.getInstance();
         this.connectedPeers = connectedPeers;
         this.publicKey = publicKey;
         this.blockchain = blockchain;
@@ -79,16 +79,17 @@ public class TransactionManager extends Thread{
         }
 
         Logger.log("Validating transaction: " + transaction, LogLevel.Debug);
-
         boolean isValid = transaction.validateTransaction(utxoPool);
 
-        if (isValid) {
-            Logger.log("Transaction is valid, adding to the transaction pool.", LogLevel.Success);
-            utxoPool.updateUTXOPool(transaction); // updajti se transaction pool
-            transactionPool.addTransaction(transaction); // Assuming `TransactionPool` has an `addTransaction` method
-            logTransactionDetails(transaction);
-        } else {
-            Logger.log("Transaction validation failed.", LogLevel.Error);
+        synchronized (UTXOPool.getInstance()){
+            if (isValid) {
+                Logger.log("Transaction is valid, adding to the transaction pool.", LogLevel.Success);
+                utxoPool.updateUTXOPool(transaction); // updajti se transaction pool
+                transactionPool.addTransaction(transaction); // Assuming `TransactionPool` has an `addTransaction` method
+                logTransactionDetails(transaction);
+            } else {
+                Logger.log("Transaction validation failed.", LogLevel.Error);
+            }
         }
     }
 

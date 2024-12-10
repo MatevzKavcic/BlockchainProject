@@ -28,8 +28,8 @@ public class TransactionManager extends Thread{
     private TransactionPool transactionPool;
 
 
-    public TransactionManager(UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, Blockchain blockchain, TransactionPool transactionPool) {
-        this.utxoPool = utxoPool;
+    public TransactionManager(ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, Blockchain blockchain, TransactionPool transactionPool) {
+        this.utxoPool = UTXOPool.getInstance();
         this.connectedPeers = connectedPeers;
         this.publicKey = publicKey;
         this.blockchain = blockchain;
@@ -79,16 +79,17 @@ public class TransactionManager extends Thread{
         }
 
         Logger.log("Validating transaction: " + transaction, LogLevel.Debug);
-
         boolean isValid = transaction.validateTransaction(utxoPool);
 
-        if (isValid) {
-            Logger.log("Transaction is valid, adding to the transaction pool.", LogLevel.Success);
-            utxoPool.updateUTXOPool(transaction); // updajti se transaction pool
-            transactionPool.addTransaction(transaction); // Assuming `TransactionPool` has an `addTransaction` method
-            logTransactionDetails(transaction);
-        } else {
-            Logger.log("Transaction validation failed.", LogLevel.Error);
+        synchronized (UTXOPool.getInstance()){
+            if (isValid) {
+                Logger.log("Transaction is valid, adding to the transaction pool.", LogLevel.Success);
+                utxoPool.updateUTXOPool(transaction); // updajti se transaction pool
+                transactionPool.addTransaction(transaction); // Assuming `TransactionPool` has an `addTransaction` method
+                logTransactionDetails(transaction);
+            } else {
+                Logger.log("Transaction validation failed.", LogLevel.Error);
+            }
         }
     }
 
@@ -158,9 +159,20 @@ public class TransactionManager extends Thread{
         thread.sendMessage( mString);
     }
 
-    public void updateUTXOPool(String UTXOPoolString){
-        utxoPool = gson.fromJson(UTXOPoolString,UTXOPool.class);
-        Logger.log("Updating Utxo pool",LogLevel.Success);
+    public void updateUTXOPool(String UTXOPoolString) {
+        synchronized (UTXOPool.getInstance()) {
+            Logger.log("Before update: " + UTXOPool.getInstance().toString(), LogLevel.Debug);
+
+            // Deserialize into a temporary UTXOPool instance
+            UTXOPool newUTXOPool = gson.fromJson(UTXOPoolString, UTXOPool.class);
+
+            // Clear the current singleton and repopulate it
+            UTXOPool.getInstance().getUTXOPool().clear();
+            UTXOPool.getInstance().getUTXOPool().putAll(newUTXOPool.getUTXOPool());
+
+            Logger.log("Updating UTXO pool", LogLevel.Success);
+            Logger.log("After update: " + UTXOPool.getInstance().toString(), LogLevel.Debug);
+        }
     }
 
 

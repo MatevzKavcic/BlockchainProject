@@ -10,11 +10,11 @@ import java.util.List;
 public class Blockchain {
     private List<Block> chain; // the whole blockchain
 
-    private UTXOPool UTXOPool ;
+    private UTXOPool utxoPool ;
 
-    public Blockchain(UTXOPool UTXOPool) {
+    public Blockchain(UTXOPool utxoPool) {
         chain = new ArrayList<>();
-        this.UTXOPool = UTXOPool;
+        this.utxoPool = UTXOPool.getInstance();
         // Add the genesis block
     }
 
@@ -36,19 +36,27 @@ public class Blockchain {
                 "GENESIS TRANSACTION"
         );
 
-        UTXOPool.addUTXO(genesisOutput);
+        utxoPool.addUTXO(genesisOutput);
 
         genesisTransactions.add(genesisTransaction);
+        Block genesisBlock = new Block(
+                0, // Index
+                System.currentTimeMillis(), // Current timestamp
+                genesisTransactions, // Transactions
+                "0", // Previous hash
+                0, // Nonce (initial value)
+                null // Signature (initially null)
+        );
 
-        return new Block(0, System.currentTimeMillis(), genesisTransactions, "0");
+        return genesisBlock;
     }
 
     public UTXOPool getUTXOPool() {
-        return UTXOPool;
+        return utxoPool;
     }
 
     public void setUTXOPool(UTXOPool UTXOPool) {
-        this.UTXOPool = UTXOPool;
+        this.utxoPool = UTXOPool;
     }
 
     public Block getLatestBlock() {

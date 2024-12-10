@@ -44,21 +44,21 @@ public class Peer extends Thread {
 
             BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
 
-            UTXOPool UTXOPool = new UTXOPool(); // tle mora bit null
+            UTXOPool UTXOPool = null; // tle mora bit null
 
             Blockchain blockchain = null;
 
             TransactionPool transactionPool = new TransactionPool();
 
-            TransactionManager transactionManager = new TransactionManager(UTXOPool,connectedPeers, keyGenerator.getPublicKey(),blockchain,transactionPool);
+            TransactionManager transactionManager = new TransactionManager(connectedPeers, keyGenerator.getPublicKey(),blockchain,transactionPool);
             transactionManager.start();
 
             MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool,transactionManager);
             messagingServiceThread.start();
-/* nerabis se tega za debuging.
-            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(), UTXOPool,connectedPeers,transactionPool);
+
+            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(),connectedPeers,transactionPool);
             minerThread.start();
- */
+
             if (firstNode) {
                 // Create a Server Thread !
                 Server server = new Server(portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool);

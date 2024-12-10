@@ -34,7 +34,7 @@ public class MessagingService extends Thread {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.blockchain  = blockchain;
-        this.utxoPool = utxoPool;
+        this.utxoPool = UTXOPool.getInstance();
         this.transactionManager = transactionManager;
         this.setName("Messaging service Thread");
     }

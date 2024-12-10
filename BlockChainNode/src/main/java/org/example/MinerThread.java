@@ -18,9 +18,9 @@ public class MinerThread extends Thread {
 
     private TransactionPool transactionPool;
 
-    public MinerThread(PublicKey publicKey, UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, TransactionPool transactionPool) {
+    public MinerThread(PublicKey publicKey, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, TransactionPool transactionPool) {
         this.publicKey = publicKey;
-        this.utxoPool = utxoPool;
+        this.utxoPool = UTXOPool.getInstance();
         this.connectedPeers = connectedPeers;
         this.transactionPool = transactionPool;
         this.random = new Random();
@@ -31,7 +31,7 @@ public class MinerThread extends Thread {
     public void run() {
         while (true) {
             try {
-                // Sleep for 20 seconds
+                // Sleep for 20 seconds testing
                 Thread.sleep(20000);
 
                 // Create a random transaction
@@ -40,22 +40,24 @@ public class MinerThread extends Thread {
 
                 }
                 else {
-                    boolean tmp = transaction.validateTransaction(utxoPool);
-                    if (tmp) {
-                        Logger.log("Transaction is valid.", LogLevel.Info);
+                    synchronized (UTXOPool.getInstance()){
+                        boolean tmp = transaction.validateTransaction(utxoPool);
+                        if (tmp) {
+                            Logger.log("Transaction is valid.", LogLevel.Info);
 
-                        // Broadcast the transaction
-                        broadcastTransaction(transaction);
+                            // Broadcast the transaction
+                            broadcastTransaction(transaction);
 
-                        // Update UTXOPool only after broadcasting
-                        utxoPool.updateUTXOPool(transaction);
-                        Logger.log("UTXOPool updated with transaction.", LogLevel.Success);
+                            // Update UTXOPool only after broadcasting
+                            utxoPool.updateUTXOPool(transaction);
+                            Logger.log("UTXOPool updated with transaction.", LogLevel.Success);
 
 
-                        // Add transaction to the pool
-                        transactionPool.addTransaction(transaction);
-                    } else {
-                        Logger.log("Transaction validation failed.", LogLevel.Error);
+                            // Add transaction to the pool
+                            transactionPool.addTransaction(transaction);
+                        } else {
+                            Logger.log("Transaction validation failed.", LogLevel.Error);
+                        }
                     }
                 }
 
@@ -68,15 +70,17 @@ public class MinerThread extends Thread {
     }
 
     private Transaction createRandomTransaction() {
+
+        UTXOPool utxoPool = UTXOPool.getInstance();
         // Get a random recipient from connected peers
         if (connectedPeers.isEmpty()) return null;
 
         List<PublicKey> peerKeys = new ArrayList<>(connectedPeers.keySet());
         PublicKey recipientKey = peerKeys.get(random.nextInt(peerKeys.size()));
-        String recipientPublicKey = recipientKey.toString();
+        String recipientPublicKey = publicKeyToString(recipientKey);
 
         // Random amount to send
-        int amount = random.nextInt(10) + 1;
+        int amount = 20;//random.nextInt(10) + 1;
 
         // Gather UTXOs to cover the amount
         List<TransactionInput> inputs = new ArrayList<>();

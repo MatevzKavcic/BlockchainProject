@@ -1,5 +1,13 @@
 package org.example;
 
+import util.LogLevel;
+import util.Logger;
+
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+
 public class TransactionOutput {
     private String id; // Unique identifier for this output
     private String recipient; // The public key (or address) of the recipient
@@ -15,7 +23,19 @@ public class TransactionOutput {
 
     // Check if this output belongs to a certain public key
     public boolean isMine(String publicKey) {
-        return publicKey.equals(recipient);
+        try {
+            PublicKey pk = stringToPublicKey(publicKey);
+            String Spk = publicKeyToString(pk);
+            if (recipient.equals(pk.toString())){
+                return true;
+            }
+            PublicKey rpk = stringToPublicKey(recipient);
+            String Srpk = publicKeyToString(rpk);
+            return Spk.equals(Srpk);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // Getters and setters
@@ -60,5 +80,16 @@ public class TransactionOutput {
                 ", amount=" + amount +
                 ", parentTransactionId='" + parentTransactionId + '\'' +
                 '}';
+    }
+
+    public static String publicKeyToString(PublicKey publicKey) {
+        return Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+    public PublicKey stringToPublicKey(String key) throws Exception {
+        key = key.trim();
+        byte[] keyBytes = Base64.getDecoder().decode(key);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(spec);
     }
 }

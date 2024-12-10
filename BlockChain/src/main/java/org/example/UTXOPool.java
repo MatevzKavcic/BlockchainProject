@@ -8,8 +8,20 @@ public class UTXOPool {
 
     private Map<String, TransactionOutput> UTXOPool ;
 
+    private static UTXOPool instance; // Singleton instance
     public UTXOPool() {
         this.UTXOPool = new ConcurrentHashMap<>();
+    }
+
+    public static UTXOPool getInstance() {
+        if (instance == null) {
+            synchronized (UTXOPool.class) {
+                if (instance == null) {
+                    instance = new UTXOPool();
+                }
+            }
+        }
+        return instance;
     }
 
 
