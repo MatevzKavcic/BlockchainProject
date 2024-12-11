@@ -33,7 +33,6 @@ public class Client extends Thread{
 
 
 
-
     public Client(String hostName, int portNumber, BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, PrivateKey privateKey, int connectToPort,TransactionManager transactionManager) {
         this.hostName = hostName;
         this.portNumber = portNumber;
@@ -90,10 +89,15 @@ public class Client extends Thread{
 
         String jsonMessage = in.readLine(); // Read the JSON message
 
-
         Gson gson = new Gson();
         Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
         PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
+
+        if (handshakeMessage.getHeader()==MessageType.TRANSACTION){
+            messageQueue.put(jsonMessage);
+            return;
+        }
+
         Logger.log("Received handshake message from server  " + handshakeMessage.getHeader() + " || body ->" + handshakeMessage.getBody() + "\n || public key -> " + handshakeMessage.getPublicKey());
 
 
@@ -134,6 +138,8 @@ public class Client extends Thread{
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
 
+        transactionManager.requestBlockchain(serverPublicKey);
+
     }
 
     // Method to handle messages from the server
@@ -159,7 +165,7 @@ public class Client extends Thread{
 
         Message responseMessage = new Message(MessageType.PEERLISTRETURN, ""+portNumber, publicKeyToString(publicKey));
         String jsonResponse = gson.toJson(responseMessage);
-        Logger.log("Sending response handshake to server: " , LogLevel.Status);
+        Logger.log("Sending PEERLISTRETURN to server of a new Client so he knows about me and my pulic key.: " , LogLevel.Status);
 
         out.println(jsonResponse);
 
@@ -176,12 +182,6 @@ public class Client extends Thread{
         //it stores the publicKey and the peers socket and the writemeThread;
         connectedPeers.put(serverPublicKey, peerInfo);
 
-        //Logger.log("new connection :  ");
-        //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
-        //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
-        //Logger.log("----> IP :  " + socket.getInetAddress());
-        //Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
-        //Logger.log("----------------------------");
 
         Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
 

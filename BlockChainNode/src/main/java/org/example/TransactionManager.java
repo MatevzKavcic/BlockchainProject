@@ -28,15 +28,14 @@ public class TransactionManager extends Thread{
     private TransactionPool transactionPool;
 
 
-    public TransactionManager(ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, Blockchain blockchain, TransactionPool transactionPool) {
+    public TransactionManager(ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, Blockchain blockchain) {
         this.utxoPool = UTXOPool.getInstance();
         this.connectedPeers = connectedPeers;
         this.publicKey = publicKey;
         this.blockchain = blockchain;
-        this.transactionPool = transactionPool;
+        this.transactionPool = TransactionPool.getInstance();  // Use the singleton instance
         this.random = new Random();
-        this.setName("transaction Mannager Thread");
-
+        this.setName("transaction Manager Thread");
     }
 
     public void run(){
@@ -52,14 +51,18 @@ public class TransactionManager extends Thread{
                     Logger.log("WAITING FOR A Updated connected peers");
                     SharedResources.LOCK.wait();
                 }
-                Logger.log("NOT WAITING ANYMORE REQUESTING");
 
-                // When notified and conditions are met, send requests
-                List<PublicKey> peerKeys = new ArrayList<>(connectedPeers.keySet());
-                Random random = new Random();
-                requestTransactionPool(peerKeys.get(random.nextInt(peerKeys.size())));
-                requestUTXOPool(peerKeys.get(random.nextInt(peerKeys.size())));
-                requestBlockchain(peerKeys.get(random.nextInt(peerKeys.size())));
+                if (blockchain==null){
+                    Logger.log("NOT WAITING ANYMORE REQUESTING");
+
+                    // When notified and conditions are met, send requests
+                    List<PublicKey> peerKeys = new ArrayList<>(connectedPeers.keySet());
+                    Random random = new Random();
+                    requestTransactionPool(peerKeys.get(random.nextInt(peerKeys.size())));
+                    requestUTXOPool(peerKeys.get(random.nextInt(peerKeys.size())));
+                    requestBlockchain(peerKeys.get(random.nextInt(peerKeys.size())));
+                }
+
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -71,9 +74,8 @@ public class TransactionManager extends Thread{
         }
 
         //make new thread that is only for making new transactions
-        RandomTransactionMakerThread randomTransactionMakerThread = new RandomTransactionMakerThread(publicKey,utxoPool,connectedPeers,transactionPool);
+        RandomTransactionMakerThread randomTransactionMakerThread = new RandomTransactionMakerThread(publicKey,utxoPool,connectedPeers);
         randomTransactionMakerThread.start();
-
     }
 
     // to bo class ki booo na zacetku requestou blockchain
@@ -136,9 +138,20 @@ public class TransactionManager extends Thread{
     }
 
     public void updateTransactionPool(String transactionPoolString) {
-        transactionPool=gson.fromJson(transactionPoolString,TransactionPool.class);
-    }
+        synchronized (TransactionPool.getInstance()) {
+            Logger.log("Before update: " + TransactionPool.getInstance().getTransactionSummary(), LogLevel.Debug);
 
+            // Deserialize into a temporary TransactionPool instance
+            TransactionPool newTransactionPool = gson.fromJson(transactionPoolString, TransactionPool.class);
+
+            // Clear the current singleton and repopulate it
+            TransactionPool.getInstance().getTransactionPool().clear();
+            TransactionPool.getInstance().getTransactionPool().putAll(newTransactionPool.getTransactionPool());
+
+            Logger.log("Updating Transaction Pool", LogLevel.Success);
+            Logger.log("After update: " + TransactionPool.getInstance().getTransactionSummary(), LogLevel.Debug);
+        }
+    }
     public void requestBlockchain(PublicKey sendToPublicKey) {
 
         //enega rendom peera dobi in poslji blockchainrequest.
@@ -201,7 +214,7 @@ public class TransactionManager extends Thread{
         UTXOPool utxoPool = UTXOPool.getInstance();
         StringBuilder balanceReport = new StringBuilder();
 
-        balanceReport.append(String.format("%-30s | %-10s\n", "Peer", "Balance"));
+        balanceReport.append(String.format("\n%-30s | %-10s\n", "Peer", "Balance"));
         balanceReport.append("-".repeat(42)).append("\n");
 
         // Add your own balance
@@ -222,6 +235,7 @@ public class TransactionManager extends Thread{
 
         Logger.log(balanceReport.toString(), LogLevel.Info);
     }
+
     public static String generateNameFromPublicKey(String publicKey) {
         // Generate a UUID based on the public key hash
         UUID uuid = UUID.nameUUIDFromBytes(publicKey.getBytes());

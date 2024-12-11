@@ -28,15 +28,14 @@ public class TransactionManager extends Thread{
     private TransactionPool transactionPool;
 
 
-    public TransactionManager(ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, Blockchain blockchain, TransactionPool transactionPool) {
+    public TransactionManager(ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, PublicKey publicKey, Blockchain blockchain) {
         this.utxoPool = UTXOPool.getInstance();
         this.connectedPeers = connectedPeers;
         this.publicKey = publicKey;
         this.blockchain = blockchain;
-        this.transactionPool = transactionPool;
+        this.transactionPool = TransactionPool.getInstance();  // Use the singleton instance
         this.random = new Random();
-        this.setName("transaction Mannager Thread");
-
+        this.setName("transaction Manager Thread");
     }
 
     public void run(){
@@ -75,7 +74,7 @@ public class TransactionManager extends Thread{
         }
 
         //make new thread that is only for making new transactions
-        RandomTransactionMakerThread randomTransactionMakerThread = new RandomTransactionMakerThread(publicKey,utxoPool,connectedPeers,transactionPool);
+        RandomTransactionMakerThread randomTransactionMakerThread = new RandomTransactionMakerThread(publicKey,utxoPool,connectedPeers);
         randomTransactionMakerThread.start();
     }
 
@@ -140,6 +139,7 @@ public class TransactionManager extends Thread{
 
     public void updateTransactionPool(String transactionPoolString) {
         transactionPool=gson.fromJson(transactionPoolString,TransactionPool.class);
+        Logger.log(transactionPool.getTransactionSummary());
     }
 
     public void requestBlockchain(PublicKey sendToPublicKey) {

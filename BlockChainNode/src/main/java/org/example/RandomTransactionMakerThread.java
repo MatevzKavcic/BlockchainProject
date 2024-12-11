@@ -20,11 +20,11 @@ public class RandomTransactionMakerThread extends Thread{
 
     private TransactionPool transactionPool;
 
-    public RandomTransactionMakerThread(PublicKey publicKey, UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, TransactionPool transactionPool) {
+    public RandomTransactionMakerThread(PublicKey publicKey, UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers) {
         this.publicKey = publicKey;
-        this.utxoPool = UTXOPool.getInstance();
+        this.utxoPool = UTXOPool.getInstance();  // Ensures we're using the singleton UTXOPool instance
         this.connectedPeers = connectedPeers;
-        this.transactionPool = transactionPool;
+        this.transactionPool = TransactionPool.getInstance();  // Use the singleton instance
         this.random = new Random();
         this.setName("RandomTransactionMakerThread");
     }
@@ -35,7 +35,7 @@ public class RandomTransactionMakerThread extends Thread{
         while (true) {
             try {
                 // Sleep for 20 seconds
-                Thread.sleep(20000);
+                Thread.sleep(30000);
 
                 // Create a random transaction
                 Transaction transaction = createRandomTransaction();
@@ -44,8 +44,6 @@ public class RandomTransactionMakerThread extends Thread{
                 }
                 else {
                     synchronized (UTXOPool.getInstance()){
-                        Logger.log("Before validating a transaction I MAKE!!");
-                        logTransactionDetails(transaction);
                         boolean tmp = transaction.validateTransaction(utxoPool);
                         if (tmp) {
                             Logger.log("Transaction is valid.", LogLevel.Info);
@@ -94,7 +92,7 @@ public class RandomTransactionMakerThread extends Thread{
         String senderPublicKey = publicKeyToString(publicKey);
 
         if (utxoPool.getMyTotalFunds(senderPublicKey) < amount) {
-            Logger.log("Insufficient funds for transaction. Needed: " + amount+ "  Currently available : " + utxoPool.getMyTotalFunds(senderPublicKey));
+            Logger.log("Insufficient funds for transaction. Needed: " + amount);
             return null;
         }
 
@@ -132,20 +130,16 @@ public class RandomTransactionMakerThread extends Thread{
         }
 
     }
-    private void logTransactionDetails(Transaction transaction) {
-        // Get sender and recipient names
-        String senderName = generateNameFromPublicKey(transaction.getSender());
-        String recipientName = generateNameFromPublicKey(transaction.getRecipient());
 
 
-        int senderBalance = UTXOPool.getInstance().getMyTotalFunds(transaction.getSender());
-        int recipientBalance = UTXOPool.getInstance().getMyTotalFunds(transaction.getRecipient());
-
-        // Log the transaction details
-        String transactionLog = String.format("%s (%d credits) --> %s (%d credits) %d credits transferred",
-                senderName, senderBalance, recipientName, recipientBalance, transaction.getAmount());
-
-        Logger.log(transactionLog, LogLevel.Info);
+    public static String publicKeyToString(PublicKey publicKey) {
+        return Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+    public PublicKey stringToPublicKey(String key) throws Exception {
+        byte[] keyBytes = Base64.getDecoder().decode(key);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(spec);
     }
 
     public void logAllPeerBalances() {
@@ -173,22 +167,11 @@ public class RandomTransactionMakerThread extends Thread{
 
         Logger.log(balanceReport.toString(), LogLevel.Info);
     }
+
     public static String generateNameFromPublicKey(String publicKey) {
         // Generate a UUID based on the public key hash
         UUID uuid = UUID.nameUUIDFromBytes(publicKey.getBytes());
         return uuid.toString().split("-")[0]; // Use the first part for brevity
-    }
-
-
-
-    public static String publicKeyToString(PublicKey publicKey) {
-        return Base64.getEncoder().encodeToString(publicKey.getEncoded());
-    }
-    public PublicKey stringToPublicKey(String key) throws Exception {
-        byte[] keyBytes = Base64.getDecoder().decode(key);
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePublic(spec);
     }
 
 

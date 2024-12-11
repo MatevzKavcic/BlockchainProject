@@ -26,6 +26,11 @@ public class MessagingService extends Thread {
 
     private TransactionManager transactionManager;
 
+    public BlockingQueue<String> getMessageQueue() {
+        return messageQueue;
+    }
+
+    private TransactionPool transactionPool;
     public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, String hostName, int portNumber, PublicKey publicKey, PrivateKey privateKey, Blockchain blockchain, UTXOPool utxoPool, TransactionManager transactionManager) {
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
@@ -34,8 +39,9 @@ public class MessagingService extends Thread {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.blockchain  = blockchain;
-        this.utxoPool = UTXOPool.getInstance();
+        this.utxoPool = UTXOPool.getInstance();  // Ensure singleton instance of UTXO pool
         this.transactionManager = transactionManager;
+        this.transactionPool = TransactionPool.getInstance();  // Use the singleton instance
         this.setName("Messaging service Thread");
     }
 

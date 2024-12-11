@@ -34,6 +34,7 @@ public class TransactionOutput {
             return Spk.equals(Srpk);
 
         } catch (Exception e) {
+            Logger.log("TLE JE NEKI NAROBE MOLI BOGA DA NE PRIDE SM",LogLevel.Error);
             throw new RuntimeException(e);
         }
     }

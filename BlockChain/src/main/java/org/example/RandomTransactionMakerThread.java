@@ -20,11 +20,11 @@ public class RandomTransactionMakerThread extends Thread{
 
     private TransactionPool transactionPool;
 
-    public RandomTransactionMakerThread(PublicKey publicKey, UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, TransactionPool transactionPool) {
+    public RandomTransactionMakerThread(PublicKey publicKey, UTXOPool utxoPool, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers) {
         this.publicKey = publicKey;
-        this.utxoPool = UTXOPool.getInstance();
+        this.utxoPool = UTXOPool.getInstance();  // Ensures we're using the singleton UTXOPool instance
         this.connectedPeers = connectedPeers;
-        this.transactionPool = transactionPool;
+        this.transactionPool = TransactionPool.getInstance();  // Use the singleton instance
         this.random = new Random();
         this.setName("RandomTransactionMakerThread");
     }
@@ -146,7 +146,7 @@ public class RandomTransactionMakerThread extends Thread{
         UTXOPool utxoPool = UTXOPool.getInstance();
         StringBuilder balanceReport = new StringBuilder();
 
-        balanceReport.append(String.format("%-30s | %-10s\n", "Peer", "Balance"));
+        balanceReport.append(String.format("\n%-30s | %-10s\n", "Peer", "Balance"));
         balanceReport.append("-".repeat(42)).append("\n");
 
         // Add your own balance

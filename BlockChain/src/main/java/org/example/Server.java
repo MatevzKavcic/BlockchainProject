@@ -115,11 +115,6 @@ public class Server extends Thread{
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
 
-
-        //TO IMPLEMENT:
-        //ko pride now peeer v network mu damo balance 100.0 "kao 100 eurou"
-
-        //sendUTXOPool(out,gson);
     }
 
 
