@@ -105,6 +105,7 @@ public class Server extends Thread{
         else {
             sendListToPeer(gson,writeMeThread);
             connectedPeers.put(clientPublicKey, peerInfo);
+            notifyUpdates();
         }
 
         Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
@@ -145,6 +146,13 @@ public class Server extends Thread{
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(spec);
+    }
+    public synchronized void notifyUpdates() {
+        synchronized (SharedResources.LOCK) {
+            SharedResources.LOCK.notifyAll(); // Notify all waiting threads
+            Logger.log("Updating threads");
+        }
+
     }
 
 
