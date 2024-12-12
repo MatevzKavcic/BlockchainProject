@@ -56,7 +56,7 @@ public class Peer extends Thread {
             MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool,transactionManager);
             messagingServiceThread.start();
 
-            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(),connectedPeers,transactionPool);
+            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(), connectedPeers);
             minerThread.start();
 
             if (firstNode) {

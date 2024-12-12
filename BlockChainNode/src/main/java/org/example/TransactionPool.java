@@ -34,17 +34,19 @@ public class TransactionPool {
         transactionPool.put(transaction.getTransactionId(), transaction);
         Logger.log("Transaction added to the pool", LogLevel.Success);
     }
+    public synchronized void removeTransactions(List<Transaction> transactions) {
+        for (Transaction transaction : transactions) {
+            transactionPool.remove(transaction.getTransactionId());
+        }
+        Logger.log(transactions.size() + " transactions removed from the pool", LogLevel.Warn);
+    }
+
 
     public synchronized List<Transaction> getTransactionsForBlock(int maxCount) {
         List<Transaction> selectedTransactions = transactionPool.values()
                 .stream()
                 .limit(maxCount)
                 .collect(Collectors.toList());
-
-        // Remove selected transactions from the pool
-        for (Transaction transaction : selectedTransactions) {
-            transactionPool.remove(transaction.getTransactionId());
-        }
 
         return selectedTransactions;
     }

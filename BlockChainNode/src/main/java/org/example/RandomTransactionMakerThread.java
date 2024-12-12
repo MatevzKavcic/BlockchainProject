@@ -146,7 +146,7 @@ public class RandomTransactionMakerThread extends Thread{
         UTXOPool utxoPool = UTXOPool.getInstance();
         StringBuilder balanceReport = new StringBuilder();
 
-        balanceReport.append(String.format("%-30s | %-10s\n", "Peer", "Balance"));
+        balanceReport.append(String.format("\n%-30s | %-10s\n", "Peer", "Balance"));
         balanceReport.append("-".repeat(42)).append("\n");
 
         // Add your own balance

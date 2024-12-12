@@ -46,7 +46,7 @@ public class Peer extends Thread {
 
             UTXOPool UTXOPool = new UTXOPool();
 
-            Blockchain blockchain = new Blockchain(UTXOPool);
+            Blockchain blockchain = Blockchain.getInstance();
 
             blockchain.addGenesisBlock(keyGenerator.getPublicKey());
             TransactionPool transactionPool = TransactionPool.getInstance();
@@ -54,11 +54,11 @@ public class Peer extends Thread {
             TransactionManager transactionManager = new TransactionManager(connectedPeers, keyGenerator.getPublicKey(),blockchain);
             transactionManager.start();
 
-            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool,transactionManager);
-            messagingServiceThread.start();
-
-            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(),connectedPeers,transactionPool);
+            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(), connectedPeers);
             minerThread.start();
+
+            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool,transactionManager,minerThread);
+            messagingServiceThread.start();
 
             if (firstNode) {
                 // Create a Server Thread !

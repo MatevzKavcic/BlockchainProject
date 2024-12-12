@@ -31,7 +31,9 @@ public class MessagingService extends Thread {
     }
 
     private TransactionPool transactionPool;
-    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, String hostName, int portNumber, PublicKey publicKey, PrivateKey privateKey, Blockchain blockchain, UTXOPool utxoPool, TransactionManager transactionManager) {
+
+    private MinerThread minerThread;
+    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, String hostName, int portNumber, PublicKey publicKey, PrivateKey privateKey, Blockchain blockchain, UTXOPool utxoPool, TransactionManager transactionManager, MinerThread minerThread) {
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
         this.hostName = hostName;
@@ -39,6 +41,7 @@ public class MessagingService extends Thread {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.blockchain  = blockchain;
+        this.minerThread = minerThread;
         this.utxoPool = UTXOPool.getInstance();  // Ensure singleton instance of UTXO pool
         this.transactionManager = transactionManager;
         this.transactionPool = TransactionPool.getInstance();  // Use the singleton instance
@@ -102,23 +105,12 @@ public class MessagingService extends Thread {
                         thread.sendMessage( mString);
                     }
                     case BLOCKCHAINRESPONSE -> {
-                        blockchain = gson.fromJson(messageObject.getBody(), Blockchain.class);//string zs blockchainBody
+                        // I got the BLockchain from a peer now i want to update it localy.
+                        Blockchain.setInstance(gson.fromJson(messageObject.getBody(), Blockchain.class));
                         synchronized (SharedResources.LOCK) {
                             notifyUpdates();
                         }
                     }
-
-                    // if you get this block it means that you just connected to a network and the node you connected to sent you this message.
-                    case BLOCKCHAINSEND -> {
-                    }
-                    case BLOCKCHAINITIALIZE -> {
-                        blockchain = gson.fromJson(messageObject.getBody(), Blockchain.class);//string zs blockchainBody
-
-                        utxoPool= blockchain.getUTXOPool();
-                        Logger.log(blockchain.getUTXOPool().toString() ,LogLevel.Warn);
-
-                    }
-
 
                     case UTXOPOOLINITIALIZATION -> {
                         utxoPool= gson.fromJson(messageObject.getBody(), UTXOPool.class);
@@ -153,6 +145,9 @@ public class MessagingService extends Thread {
                     case RESPONSEUTXOPOOL->{
                         Logger.log("recived RESPONSE UTXOPOOL message from : "+ senderName+ messageObject.getBody(), LogLevel.Status);
                         transactionManager.updateUTXOPool(messageObject.getBody());
+                    }
+                    case BLOCK -> {
+                        Logger.log("RECIVED A NEW BLOCK from : " + senderName, LogLevel.Info);
                     }
                 }
 

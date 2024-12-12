@@ -1,5 +1,8 @@
 package org.example;
 
+import util.LogLevel;
+import util.Logger;
+
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
@@ -8,14 +11,43 @@ import java.util.Base64;
 import java.util.List;
 
 public class Blockchain {
+    private static Blockchain instance;  // Static instance of the singleton
     private List<Block> chain; // the whole blockchain
+    private UTXOPool utxoPool;
 
-    private UTXOPool utxoPool ;
 
-    public Blockchain(UTXOPool utxoPool) {
+
+    private int miningDifficulty;
+
+    // Private constructor to prevent external instantiation
+    private Blockchain() {
         chain = new ArrayList<>();
-        this.utxoPool = UTXOPool.getInstance();
-        // Add the genesis block
+        this.utxoPool = UTXOPool.getInstance(); // Assume UTXOPool is a singleton as well
+        miningDifficulty= 6;
+    }
+
+    // Public method to get the single instance of Blockchain
+    public static synchronized Blockchain getInstance() {
+        if (instance==null){
+            instance = new Blockchain();
+        }
+        return instance;
+    }
+
+    // Method to update or initialize the blockchain
+    public static synchronized void setInstance(Blockchain newInstance) {
+        if (instance == null) {
+            instance = newInstance;
+            synchronized (SharedResources.LOCK) {
+                SharedResources.LOCK.notifyAll(); // Notify all waiting threads
+            }
+        } else {
+            Logger.log("blockchain is Alredy Set", LogLevel.Status);
+            return;
+        }
+    }
+    public int getMiningDifficulty() {
+        return miningDifficulty;
     }
 
     private Block createGenesisBlock(PublicKey publicKey) {
@@ -64,7 +96,6 @@ public class Blockchain {
     }
 
     public void addBlock(Block newBlock) {
-        newBlock.mineBlock(4); // Adjust difficulty as needed
         chain.add(newBlock);
     }
 

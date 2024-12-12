@@ -37,12 +37,14 @@ public class TransactionPool {
                 .limit(maxCount)
                 .collect(Collectors.toList());
 
-        // Remove selected transactions from the pool
-        for (Transaction transaction : selectedTransactions) {
+        return selectedTransactions;
+    }
+
+    public synchronized void removeTransactions(List<Transaction> transactions) {
+        for (Transaction transaction : transactions) {
             transactionPool.remove(transaction.getTransactionId());
         }
-
-        return selectedTransactions;
+        Logger.log(transactions.size() + " transactions removed from the pool", LogLevel.Warn);
     }
 
     public synchronized String getTransactionSummary() {

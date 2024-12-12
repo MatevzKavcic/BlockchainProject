@@ -6,7 +6,7 @@ public class Logger {
 
     public static final String RESET = "\u001B[0m";
     public static final String ERROR = "\u001B[31m";
-    public static final String WARN = "\u001B[32m";
+    public static final String WARN = "\u001B[38;5;22m";
     public static final String INFO = "\u001B[33m";
     public static final String SUCCESS = "\u001B[34m";
     public static final String DEBUG = "\u001B[35m";
