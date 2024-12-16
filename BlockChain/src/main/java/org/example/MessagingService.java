@@ -33,7 +33,8 @@ public class MessagingService extends Thread {
     private TransactionPool transactionPool;
 
     private MinerThread minerThread;
-    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, String hostName, int portNumber, PublicKey publicKey, PrivateKey privateKey, Blockchain blockchain, UTXOPool utxoPool, TransactionManager transactionManager, MinerThread minerThread) {
+    MiningCoordinator miningCoordinator;
+    public MessagingService(BlockingQueue<String> messageQueue, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, String hostName, int portNumber, PublicKey publicKey, PrivateKey privateKey, Blockchain blockchain, UTXOPool utxoPool, TransactionManager transactionManager, MiningCoordinator miningCoordinator) {
         this.messageQueue = messageQueue;
         this.connectedPeers = connectedPeers;
         this.hostName = hostName;
@@ -41,10 +42,10 @@ public class MessagingService extends Thread {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.blockchain  = blockchain;
-        this.minerThread = minerThread;
         this.utxoPool = UTXOPool.getInstance();  // Ensure singleton instance of UTXO pool
         this.transactionManager = transactionManager;
         this.transactionPool = TransactionPool.getInstance();  // Use the singleton instance
+        this.miningCoordinator = miningCoordinator;
         this.setName("Messaging service Thread");
     }
 
@@ -148,6 +149,7 @@ public class MessagingService extends Thread {
                     }
                     case BLOCK -> {
                         Logger.log("RECIVED A NEW BLOCK from : " + senderName, LogLevel.Info);
+                        handleNewBlock(senderName,messageObject);
                     }
                 }
 
@@ -162,6 +164,32 @@ public class MessagingService extends Thread {
             throw new RuntimeException(e);
         }
     }
+
+    public void handleNewBlock(String senderName,Message messageObject ){
+        //handle multiple cases... poglej blockchain in ce je use kul ga dodaj ....
+        miningCoordinator.interruptMining();
+
+        Block recievedBlock = gson.fromJson(messageObject.getBody(),Block.class);
+
+        if (blockchain.getLatestBlock().getIndex()== recievedBlock.getIndex() -1) ; // če je na pravem mesti ga dodaj
+        {
+            blockchain.addBlock(recievedBlock);
+            transactionPool.removeTransactions(recievedBlock.getTransactions()); // removni transakcije z bloka
+            miningCoordinator.resetMiningFlag();
+        }
+        //case drugacenga blocka na istem mestu... to bos rabu implementirat da je blockchain List listou.... in u tistih listih je pol blocki...
+        //CASE 2 je ta da si en block dodau in je use kul. druga moznost je zdej ta, da si dobil block in je na istem mestu
+        //takrat ga rabis dat samo zdraven ma se zmiri minas tisti tvoj prvi block. ne menjas nic si samo shranis.
+        //tudi validirat ne rabis si samo shranis in case da bos dobil nov block k bo meu hash od te druge verige
+        //bos lahko vedu da je pol tista bolj kul.
+
+
+
+    }
+
+
+
+
     public PublicKey stringToPublicKey(String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);

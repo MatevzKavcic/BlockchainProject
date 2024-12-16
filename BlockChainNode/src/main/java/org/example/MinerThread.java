@@ -23,8 +23,10 @@ public class MinerThread extends Thread {
 
     private Blockchain blockchain;
     private PrivateKey privateKey;
-    public MinerThread(PublicKey publicKey, PrivateKey privateKey, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers) {
+    MiningCoordinator miningCoordinator;
+    public MinerThread(PublicKey publicKey, PrivateKey privateKey, ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers, MiningCoordinator miningCoordinator) {
         this.publicKey = publicKey;
+
         this.utxoPool = UTXOPool.getInstance();
         this.connectedPeers = connectedPeers;
         this.transactionPool = TransactionPool.getInstance();
@@ -32,6 +34,7 @@ public class MinerThread extends Thread {
         this.setName("Miner");
         blockchain=Blockchain.getInstance();
         this.privateKey= privateKey;
+        this.miningCoordinator = miningCoordinator;
     }
 
     @Override
@@ -47,6 +50,15 @@ public class MinerThread extends Thread {
     }
 
     public void startMining() {
+        //preden zacnes minat moras bit fix da si pdejtou use in uzames transakcije iz tistih k so ble ze zbrisane.... zato moras pobrisat in dat
+        //in sele potem lahko gre noter b metodo.
+        while(true){
+            //pocakaj dokler lahko minas naprej.
+            if (!miningCoordinator.isMiningInterrupted()){
+                break;
+            }
+        }
+
         // 1. Get the transactions that need to be added to the block
         transactionPool= TransactionPool.getInstance();
         blockchain = Blockchain.getInstance();
@@ -57,8 +69,15 @@ public class MinerThread extends Thread {
         Block newBlock = createNewBlock(selectedTransactions);
 
         // 3. Mine the block (finding the correct nonce)
-        newBlock.mineBlock(blockchain.getMiningDifficulty());
 
+        boolean blockMined = false;
+
+        blockMined=newBlock.mineBlock(blockchain.getMiningDifficulty(),miningCoordinator);
+
+        if (blockMined==false){
+            Logger.log("Mining interupted... start again...",LogLevel.Warn);
+            return;
+        }
         //podpiši block
         try {
             newBlock.signBlock(privateKey);

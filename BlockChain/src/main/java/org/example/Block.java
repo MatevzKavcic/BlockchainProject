@@ -1,6 +1,8 @@
 package org.example;
 
-import java.io.Serial;
+import util.LogLevel;
+import util.Logger;
+
 import java.io.Serializable;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -33,13 +35,22 @@ public class Block implements Serializable {
         return HashingUtils.applySHA256(dataToHash); // Use a utility method for SHA-256 hashing
     }
 
-    public void mineBlock(int difficulty) {
+    public boolean mineBlock(int difficulty, MiningCoordinator miningCoordinator) {
         String target = new String(new char[difficulty]).replace('\0', '0'); // Difficulty target
         while (!hash.substring(0, difficulty).equals(target)) {
+            if (miningCoordinator.isMiningInterrupted()){
+                break;
+            }
             nonce++;
             hash = calculateHash();
+
         }
-        System.out.println("Block mined: " + hash);
+        if (miningCoordinator.isMiningInterrupted()){
+            Logger.log("Mining was interupetd by a new block ", LogLevel.Warn);
+            return false;
+        }
+        Logger.log("Block mined: " + hash, LogLevel.Success);
+        return true;
     }
 
     public int getIndex() {
