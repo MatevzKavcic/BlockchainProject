@@ -37,19 +37,26 @@ public class Block implements Serializable {
 
     public boolean mineBlock(int difficulty, MiningCoordinator miningCoordinator) {
         String target = new String(new char[difficulty]).replace('\0', '0'); // Difficulty target
+        Logger.log("mining block on index -> "+index);
         while (!hash.substring(0, difficulty).equals(target)) {
             if (miningCoordinator.isMiningInterrupted()){
                 break;
             }
             nonce++;
             hash = calculateHash();
-
+            if (miningCoordinator.isMiningInterrupted()){
+                Logger.log("Mining was interupetd by a new block ", LogLevel.Warn);
+                return false;
+            }
         }
-        if (miningCoordinator.isMiningInterrupted()){
-            Logger.log("Mining was interupetd by a new block ", LogLevel.Warn);
+
+        int tmpCheck = Blockchain.getInstance().getChain().size();
+
+        if (tmpCheck>=index){
             return false;
         }
-        Logger.log("Block mined: " + hash, LogLevel.Success);
+
+        Logger.log("MINED A BLOCK! index -> "+ index  + " CHain is on lenght -> " +Blockchain.getInstance().getChain().size(),LogLevel.Warn);
         return true;
     }
 

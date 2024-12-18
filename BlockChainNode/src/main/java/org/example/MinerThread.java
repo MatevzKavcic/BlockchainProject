@@ -1,6 +1,5 @@
 package org.example;
 import com.google.gson.Gson;
-import com.sun.source.tree.BlockTree;
 import util.LogLevel;
 import util.Logger;
 
@@ -10,7 +9,6 @@ import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class MinerThread extends Thread {
     private PublicKey publicKey; // The public key of this miner
@@ -75,7 +73,7 @@ public class MinerThread extends Thread {
         blockMined=newBlock.mineBlock(blockchain.getMiningDifficulty(),miningCoordinator);
 
         if (blockMined==false){
-            Logger.log("Mining interupted... start again...",LogLevel.Warn);
+            Logger.log("Mining interupted... start again...",LogLevel.Error);
             return;
         }
         //podpiši block
@@ -89,12 +87,12 @@ public class MinerThread extends Thread {
         brodcastNewBlock(newBlock);
 
         // 4. Once the block is mined, add it to the blockchain
-        blockchain.addBlock(newBlock);
+
+        blockchain.handleAddBlockForksAndSpoons(newBlock);
 
         // 5. Clear the transaction pool or mark the transactions as mined
         transactionPool.removeTransactions(selectedTransactions);
 
-        Logger.log("MINED A BLOCK!",LogLevel.Warn);
 
 
     }

@@ -110,7 +110,7 @@ public class Client extends Thread{
         out.println(jsonResponse);
 
 
-        ListenToMeThred listenThread = new ListenToMeThred(socket, in, messageQueue);
+        ListenToMeThread listenThread = new ListenToMeThread(socket, in, messageQueue);
         new Thread(listenThread).start(); // Run the listening thread
 
         WriteMeThread writeMeThread = new WriteMeThread(out);
@@ -170,7 +170,7 @@ public class Client extends Thread{
         out.println(jsonResponse);
 
 
-        ListenToMeThred listenThread = new ListenToMeThred(socket, in, messageQueue);
+        ListenToMeThread listenThread = new ListenToMeThread(socket, in, messageQueue);
         new Thread(listenThread).start(); // Run the listening thread
 
         WriteMeThread writeMeThread = new WriteMeThread(out);

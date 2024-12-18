@@ -38,7 +38,8 @@ public class TransactionPool {
         for (Transaction transaction : transactions) {
             transactionPool.remove(transaction.getTransactionId());
         }
-        Logger.log(transactions.size() + " transactions removed from the pool", LogLevel.Warn);
+        // usefull log for transactions...
+        // Logger.log(transactions.size() + " transactions removed from the pool", LogLevel.Warn);
     }
 
 

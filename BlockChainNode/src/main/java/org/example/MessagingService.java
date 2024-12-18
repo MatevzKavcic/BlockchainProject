@@ -10,9 +10,7 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,7 +51,7 @@ public class MessagingService extends Thread {
 
     Gson gson = new Gson();
 
-
+    private final Queue<Message> pendingBlockchainMessages = new LinkedList<>();
 
     @Override
     public void run() {
@@ -66,6 +64,17 @@ public class MessagingService extends Thread {
                 Type type = new TypeToken<ArrayList<Integer>>() {}.getType();
 
                 Message messageObject = gson.fromJson(message,Message.class);
+
+                //thre is an option that block comes before the blockchain and you need to handle that
+                if (Blockchain.getInstance()==null && messageObject.getHeader()== MessageType.BLOCK){
+                    Logger.log("Blockchain not available.",LogLevel.Error);
+                    pendingBlockchainMessages.add(messageObject);
+                    messageQueue.put(message);
+                    return;
+                }
+                if (Blockchain.getInstance()!=null){
+                    handleMessageBlockQueue();
+                }
 
                 PublicKey sender  = stringToPublicKey(messageObject.getPublicKey()) ;
                 String senderName = generateNameFromPublicKey(messageObject.getPublicKey());
@@ -142,15 +151,10 @@ public class MessagingService extends Thread {
                         transactionManager.updateUTXOPool(messageObject.getBody());
                         }
                     case BLOCK -> {
-                        Logger.log("RECIVED A NEW BLOCK from : " + senderName, LogLevel.Info);
                         handleNewBlock(senderName,messageObject);
 
                     }
                 }
-
-
-                // Process the message (e.g., log, broadcast, or route)
-                // For now, simply print it
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -163,25 +167,31 @@ public class MessagingService extends Thread {
     public void handleNewBlock(String senderName,Message messageObject ){
         //handle multiple cases... poglej blockchain in ce je use kul ga dodaj ....
         miningCoordinator.interruptMining();
+        blockchain = Blockchain.getInstance();
 
         Block recievedBlock = gson.fromJson(messageObject.getBody(),Block.class);
+        Logger.log("RECIVED A NEW BLOCK from : " + senderName+" on index -> "+recievedBlock.getIndex(), LogLevel.Info);
 
-        if (blockchain.getLatestBlock().getIndex()== recievedBlock.getIndex() -1) ; // če je na pravem mesti ga dodaj
-        {
-            blockchain.addBlock(recievedBlock);
-            transactionPool.removeTransactions(recievedBlock.getTransactions()); // removni transakcije z bloka
-            miningCoordinator.resetMiningFlag();
-        }
-        //case drugacenga blocka na istem mestu... to bos rabu implementirat da je blockchain List listou.... in u tistih listih je pol blocki...
-        //prvo naredi to da dobis block zacnes minat na novo.
+        //blockchain method for handling new blocks comming and forking and stuff.
+        blockchain.handleAddBlockForksAndSpoons(recievedBlock);
+        //when you handle the block reset the miner so he can mine again.
+        miningCoordinator.resetMiningFlag();
     }
 
+    public void handleMessageBlockQueue( ){
+        //handle multiple cases... poglej blockchain in ce je use kul ga dodaj ....
+        miningCoordinator.interruptMining();
+        blockchain = Blockchain.getInstance();
 
-
-
-
-
-
+        while(!pendingBlockchainMessages.isEmpty()){
+            Message blockMessage= pendingBlockchainMessages.poll();
+            Block block = gson.fromJson(blockMessage.getBody(),Block.class);
+            blockchain.handleAddBlockForksAndSpoons(block);
+            pendingBlockchainMessages.remove();
+        }
+        //when you handle the blocks from the sidequeue reset the miner so he can mine again.
+        miningCoordinator.resetMiningFlag();
+    }
 
     public PublicKey stringToPublicKey(String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);

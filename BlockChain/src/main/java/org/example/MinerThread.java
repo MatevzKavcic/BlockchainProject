@@ -77,7 +77,7 @@ public class MinerThread extends Thread {
         blockMined=newBlock.mineBlock(blockchain.getMiningDifficulty(),miningCoordinator);
 
         if (blockMined==false){
-            Logger.log("Mining interupted... start again...",LogLevel.Warn);
+            Logger.log("Mining interupted... start again...",LogLevel.Error);
             return;
         }
 
@@ -93,13 +93,10 @@ public class MinerThread extends Thread {
         brodcastNewBlock(newBlock);
 
         // 4. Once the block is mined, add it to the blockchain
-        blockchain.addBlock(newBlock);
 
+        blockchain.handleAddBlockForksAndSpoons(newBlock);
         // 5. Clear the transaction pool or mark the transactions as mined
         transactionPool.removeTransactions(selectedTransactions);
-
-        Logger.log("MINED A BLOCK!",LogLevel.Warn);
-
 
     }
 
