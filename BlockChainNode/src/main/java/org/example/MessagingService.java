@@ -67,12 +67,11 @@ public class MessagingService extends Thread {
 
                 //thre is an option that block comes before the blockchain and you need to handle that
                 if (Blockchain.getInstance()==null && messageObject.getHeader()== MessageType.BLOCK){
-                    Logger.log("Blockchain not available.",LogLevel.Error);
+                    Logger.log("BLOCCKERCOCKER ga ni tle.",LogLevel.Error);
                     pendingBlockchainMessages.add(messageObject);
-                    messageQueue.put(message);
-                    return;
+                    continue;
                 }
-                if (Blockchain.getInstance()!=null){
+                if (Blockchain.getInstance()!=null&& !pendingBlockchainMessages.isEmpty()){
                     handleMessageBlockQueue();
                 }
 
@@ -100,6 +99,8 @@ public class MessagingService extends Thread {
                     case PEERLISTRETURN -> {
                     }
                     case BLOCKCHAINREQUEST -> {
+                        Logger.log("recived REQUEST BLOCKCHAIN message from : "+ senderName, LogLevel.Status);
+
                         PeerInfo peerInfo = connectedPeers.get(sender);
 
                         WriteMeThread thread = (WriteMeThread) peerInfo.getThread();
@@ -109,6 +110,7 @@ public class MessagingService extends Thread {
                         thread.sendMessage( mString);
                     }
                     case BLOCKCHAINRESPONSE -> {
+                        Logger.log("recived RESPONSE BLOCKCHAIN message from : "+ senderName, LogLevel.Status);
                         // I got the BLockchain from a peer now i want to update it localy.
                         Blockchain.setInstance(gson.fromJson(messageObject.getBody(), Blockchain.class));
                         synchronized (SharedResources.LOCK) {
@@ -187,7 +189,6 @@ public class MessagingService extends Thread {
             Message blockMessage= pendingBlockchainMessages.poll();
             Block block = gson.fromJson(blockMessage.getBody(),Block.class);
             blockchain.handleAddBlockForksAndSpoons(block);
-            pendingBlockchainMessages.remove();
         }
         //when you handle the blocks from the sidequeue reset the miner so he can mine again.
         miningCoordinator.resetMiningFlag();

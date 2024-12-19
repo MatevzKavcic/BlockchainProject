@@ -69,7 +69,7 @@ public class Blockchain {
         } else if (newBlockIndex == mainChainLength) {
             // Fork detected
             createFork(newBlock);
-            Logger.log("Fork detected and saved.", LogLevel.Warn);
+            Logger.log("Fork detected and saved.", LogLevel.Debug);
             resolveForks();
         } else if (isExtensionOfFork(newBlock)) {
             // New block extends one of the forks

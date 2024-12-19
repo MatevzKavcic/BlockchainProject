@@ -93,7 +93,7 @@ public class Client extends Thread{
         Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
         PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
 
-        if (handshakeMessage.getHeader()==MessageType.TRANSACTION){
+        if (handshakeMessage.getHeader()==MessageType.TRANSACTION||handshakeMessage.getHeader()==MessageType.BLOCK){
             messageQueue.put(jsonMessage);
             return;
         }
@@ -124,21 +124,12 @@ public class Client extends Thread{
             connectedPeers.put(serverPublicKey, peerInfo);
             notifyUpdates();
         }
-        //Logger.log("new connection :  ");
-        //Logger.log("----> (kao sem se povezes) Local IP :  " +socket.getLocalAddress());
-        //Logger.log("----> (my port where i'm open) Local PORT :  " + socket.getLocalPort());
-        //Logger.log("----> IP :  " + socket.getInetAddress());
-        //Logger.log("----> (odprt port ku poslusa) PORT :  " + socket.getPort());
-        //Logger.log("----------------------------");
-
         Logger.log("i have " + connectedPeers.size() + " peers connected to me. those peers are on ports" , LogLevel.Status);
 
         for (PublicKey publicKey1 : connectedPeers.keySet()) {
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
-
-        transactionManager.requestBlockchain(serverPublicKey);
 
     }
 
@@ -189,8 +180,6 @@ public class Client extends Thread{
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
-
-        //na koncu nesmes requestat za blockchain ker ga ze mas od prevega node ko se povezes.
 
     }
 

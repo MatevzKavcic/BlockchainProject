@@ -32,7 +32,4 @@ public class ListenToMeThread implements Runnable {
         }
     }
 
-    public void  test(){
-        System.out.println("thecuk");
-    }
 }
