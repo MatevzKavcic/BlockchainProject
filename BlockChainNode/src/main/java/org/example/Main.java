@@ -17,7 +17,7 @@ public class Main {
     public static int portNumber =  6000 + (int)(Math.random() * 2001);
 
     public static int portNumberOfFirstConnect= 6000;
-    public static String hostName = "127.0.0.1";
+    public static String hostName = "mainnode";
     public static boolean firstNode = false;
 
 

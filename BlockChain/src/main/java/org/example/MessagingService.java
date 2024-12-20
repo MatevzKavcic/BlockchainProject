@@ -96,6 +96,12 @@ public class MessagingService extends Thread {
 
                         for (Integer connectToPort : arrayListOfPorts) {
                             //Is special variable has to be true so the servir will get the correct header.
+                            //implementing logic for connecting to a specific port and a
+                            // hostName... port:6002 hostname:node2.... always this corelation
+
+
+
+
                             Client novaPovezava = new Client(hostName,portNumber,messageQueue,connectedPeers,publicKey,privateKey,connectToPort,true);
                             novaPovezava.start();
 

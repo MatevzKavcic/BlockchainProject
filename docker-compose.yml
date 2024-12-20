@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  mainnode:
+    build:
+      context: ./BlockChain  # The directory where the Dockerfile for the main node is located
+      dockerfile: Dockerfile
+    container_name: mainNode
+    environment:
+      - JAVA_OPTS=-DportNumber=6000 -DfirstNode=true -DhostName=mainNode -DportNumberOfFirstConnect=6000
+    networks:
+      - blockchain-network
+    ports:
+      - "6000:6000" # Expose the mainNode's port to the host
+
+  normalnode:
+    build:
+      context: ./BlockChainNode  # The directory where the Dockerfile for the normal node is located
+      dockerfile: Dockerfile
+    container_name: normalNode
+    environment:
+      - JAVA_OPTS=-DportNumber=6001 -DfirstNode=false -DhostName=mainNode -DportNumberOfFirstConnect=6000
+    networks:
+      - blockchain-network
+    depends_on:
+      - mainnode
+
+networks:
+  blockchain-network:
+    driver: bridge
