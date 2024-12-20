@@ -73,7 +73,7 @@ public class ListenToMeThread implements Runnable {
                 Logger.log("Failed to close socket for peer: " + peerPublicKey, LogLevel.Error);
             }
 
-            Logger.log("Disconnected peer removed: " + generateNameFromPublicKey(publicKeyToString(peerPublicKey)), LogLevel.Status);
+            Logger.log("Disconnected peer removed: " + generateNameFromPublicKey(publicKeyToString(peerPublicKey)), LogLevel.Error);
         }
     }
 

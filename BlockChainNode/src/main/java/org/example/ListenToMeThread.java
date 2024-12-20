@@ -42,7 +42,7 @@ public class ListenToMeThread implements Runnable {
                 messageQueue.put(message); // Add message to queue
             }
         } catch (IOException e) {
-            Logger.log("Peer disconnected: " + peerPublicKey, LogLevel.Error);
+            Logger.log("Peer disconnected: " + generateNameFromPublicKey(publicKeyToString(peerPublicKey)), LogLevel.Error);
             handleDisconnection(peerPublicKey);
         } catch (InterruptedException e) {
             Logger.log("Listening thread interrupted for peer: " + peerPublicKey, LogLevel.Debug);
@@ -73,7 +73,7 @@ public class ListenToMeThread implements Runnable {
                 Logger.log("Failed to close socket for peer: " + peerPublicKey, LogLevel.Error);
             }
 
-            Logger.log("Disconnected peer removed: " + generateNameFromPublicKey(publicKeyToString(peerPublicKey)), LogLevel.Status);
+            Logger.log("Disconnected peer removed: " + generateNameFromPublicKey(publicKeyToString(peerPublicKey)), LogLevel.Error);
         }
     }
 

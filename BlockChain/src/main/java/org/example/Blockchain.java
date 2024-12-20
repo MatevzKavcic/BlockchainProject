@@ -25,7 +25,7 @@ public class Blockchain {
         chain = new ArrayList<>();
         forks = new ArrayList<>();
         this.utxoPool = UTXOPool.getInstance(); // Assume UTXOPool is a singleton as well
-        miningDifficulty= 7;
+        miningDifficulty= 5;
     }
 
     // Public method to get the single instance of Blockchain
