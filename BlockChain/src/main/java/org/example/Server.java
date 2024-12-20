@@ -90,7 +90,7 @@ public class Server extends Thread{
 
         int peersPortNum = Integer.parseInt(responseMessage.getBody()); // port serverja od peera ki se je povezal
 
-        ListenToMeThread listenThread = new ListenToMeThread(clientSocket, in, messageQueue);
+        ListenToMeThread listenThread = new ListenToMeThread(clientSocket, in, messageQueue,stringToPublicKey(responseMessage.getPublicKey()),connectedPeers);
         new Thread(listenThread).start(); // Run the listening thread
 
         WriteMeThread writeMeThread = new WriteMeThread(out);
