@@ -41,6 +41,7 @@ public class Blockchain {
     // Method to update or initialize the blockchain
     public static synchronized void setInstance(Blockchain newInstance) {
         if (instance == null) {
+            Logger.log("seting instance of the blockchain");
             instance = newInstance;
             synchronized (SharedResources.LOCK) {
                 SharedResources.LOCK.notifyAll(); // Notify all waiting threads

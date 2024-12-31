@@ -39,12 +39,13 @@ public class Server extends Thread{
         this.privateKey = privateKey;
         this.blockchain = blockchain;
         this.UTXOPool = UTXOPool;
+        this.setName("SERVER STRING");
     }
 
     @Override
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
-            System.out.println("Server listening on port " + portNumber);
+            Logger.log("Server listening on port " + portNumber);
             while (true) {
                 Socket clientSocket = serverSocket.accept();
 

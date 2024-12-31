@@ -91,8 +91,17 @@ public class MessagingService extends Thread {
 
                         for (Integer connectToPort : arrayListOfPorts) {
                             //Is special variable has to be true so the servir will get the correct header.
-                            Client novaPovezava = new Client(hostName,portNumber,messageQueue,connectedPeers,publicKey,privateKey,connectToPort,true);
+                            int temp = 6000;
+                            temp = connectToPort-temp;
+                            String tmp = String.valueOf(temp);
+                            String povezi = "blockchainproject-normalnode"+temp+"-1";
+
+
+                            Logger.log("I AM CONNECTING TO PORT " + connectToPort + " on hostname ? --> " +povezi);
+                            Client novaPovezava = new Client(povezi,portNumber,messageQueue,connectedPeers,publicKey,privateKey,connectToPort,true);
+                            //Client novaPovezava = new Client(hostName,portNumber,messageQueue,connectedPeers,publicKey,privateKey,connectToPort,true);
                             novaPovezava.start();
+
 
                         }
                     }

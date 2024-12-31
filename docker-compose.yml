@@ -3,7 +3,7 @@ version: "3.9"
 services:
   mainnode:
     build:
-      context: ./BlockChain  # The directory where the Dockerfile for the main node is located
+      context: ./BlockChain
       dockerfile: Dockerfile
     container_name: mainNode
     environment:
@@ -11,19 +11,57 @@ services:
     networks:
       - blockchain-network
     ports:
-      - "6000:6000" # Expose the mainNode's port to the host
+      - "6000:6000"
 
-  normalnode:
+  normalnode1:
     build:
-      context: ./BlockChainNode  # The directory where the Dockerfile for the normal node is located
+      context: ./BlockChainNode
       dockerfile: Dockerfile
-    container_name: normalNode
     environment:
-      - JAVA_OPTS=-DportNumber=6001 -DfirstNode=false -DhostName=mainNode -DportNumberOfFirstConnect=6000
+      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+      - NODE_PORT=6001
     networks:
       - blockchain-network
-    depends_on:
-      - mainnode
+   
+  normalnode2:
+    build:
+      context: ./BlockChainNode
+      dockerfile: Dockerfile
+    environment:
+      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+      - NODE_PORT=6002
+    networks:
+      - blockchain-network
+   
+  normalnode3:
+    build:
+      context: ./BlockChainNode
+      dockerfile: Dockerfile
+    environment:
+      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+      - NODE_PORT=6003
+    networks:
+      - blockchain-network
+
+  normalnode4:
+    build:
+      context: ./BlockChainNode
+      dockerfile: Dockerfile
+    environment:
+      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+      - NODE_PORT=6004
+    networks:
+      - blockchain-network
+   
+  normalnode5:
+    build:
+      context: ./BlockChainNode
+      dockerfile: Dockerfile
+    environment:
+      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+      - NODE_PORT=6005
+    networks:
+      - blockchain-network
 
 networks:
   blockchain-network:

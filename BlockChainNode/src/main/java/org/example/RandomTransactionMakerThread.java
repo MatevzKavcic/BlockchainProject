@@ -26,12 +26,14 @@ public class RandomTransactionMakerThread extends Thread{
         this.connectedPeers = connectedPeers;
         this.transactionPool = TransactionPool.getInstance();  // Use the singleton instance
         this.random = new Random();
-        this.setName("RandomTransactionMakerThread");
+        this.setName("Random Transaction Maker Thread");
     }
 
 
     @Override
     public void run() {
+        Logger.log("going into infinite loop in RANDOM Transaction manager");
+
         while (true) {
             try {
                 // Sleep for 20 seconds
@@ -75,7 +77,7 @@ public class RandomTransactionMakerThread extends Thread{
 
     private Transaction createRandomTransaction() {
         // Get a random recipient from connected peers
-        if (connectedPeers.isEmpty()) return null;
+        if (connectedPeers.isEmpty()&&Blockchain.getInstance()==null) return null;
 
         List<PublicKey> peerKeys = new ArrayList<>(connectedPeers.keySet());
         PublicKey recipientKey = peerKeys.get(random.nextInt(peerKeys.size()));

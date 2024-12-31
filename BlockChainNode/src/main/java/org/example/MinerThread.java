@@ -37,10 +37,13 @@ public class MinerThread extends Thread {
 
     @Override
     public void run() {
+        Logger.log("going into infinite loop in MINER THREAD");
         while (true) {
             if(Blockchain.getInstance()==null){
+              //  Logger.log("Blockchain is null");
             }
             else {
+                Logger.log("Start Mining please.");
                 startMining();
             }
         }

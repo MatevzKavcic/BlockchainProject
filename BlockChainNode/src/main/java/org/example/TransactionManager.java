@@ -47,13 +47,15 @@ public class TransactionManager extends Thread{
             // Wait until blockchain` is not null
             try {
                 // Wait until blockchain is not null AND connectedPeers is not empty
+                Logger.log("going into infinite loop in Transaction manager");
+
                 while (connectedPeers.isEmpty()) {
                     Logger.log("WAITING FOR A Updated connected peers");
                     SharedResources.LOCK.wait();
                 }
 
-                if (blockchain==null){
-                    Logger.log("NOT WAITING ANYMORE REQUESTING");
+                if (Blockchain.getInstance()==null){
+                    Logger.log("NOT WAITING ANYMORE REQUESTING, sending requests for trans poool  utxo pool and blockchain.");
 
                     // When notified and conditions are met, send requests
                     List<PublicKey> peerKeys = new ArrayList<>(connectedPeers.keySet());
@@ -63,11 +65,27 @@ public class TransactionManager extends Thread{
                     requestBlockchain(peerKeys.get(random.nextInt(peerKeys.size())));
                 }
 
+                Logger.log("going into infinite loop2 in Transaction manager");
+
+
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
+
+
+            Logger.log("blockshain is "+ Blockchain.getInstance());
+            if ( Blockchain.getInstance()!=null){
+                Logger.log("BLOCKCHAIN IS NOT NUL CONDITION");
+                if (transactionPool!=null){
+                    Logger.log("TRANSACTIONPOOLIS NOT NUTLL CONTITION ");
+                    Logger.log("Breaking out of infinite while loop ");
+
+                }
+            }
+
+
 
             // If the blockchain, transactionPool, and UTXOPool are already available
             Logger.log(transactionPool + "" + blockchain, LogLevel.Debug);

@@ -14,27 +14,27 @@ public class PeerInfo {
         this.serverPort = serverPort;
     }
 
-    public Socket getSocket() {
+    public synchronized Socket getSocket() {
         return socket;
     }
 
-    public Thread getThread() {
+    public synchronized Thread getThread() {
         return thread;
     }
 
-    public void setSocket(Socket socket) {
+    public synchronized void setSocket(Socket socket) {
         this.socket = socket;
     }
 
-    public void setThread(Thread thread) {
+    public synchronized void setThread(Thread thread) {
         this.thread = thread;
     }
 
-    public int getServerPort() {
+    public synchronized  int getServerPort() {
         return serverPort;
     }
 
-    public void setServerPort(int serverPort) {
+    public synchronized  void setServerPort(int serverPort) {
         this.serverPort = serverPort;
     }
 }
