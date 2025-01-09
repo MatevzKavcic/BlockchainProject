@@ -55,12 +55,14 @@ public class MinerThread extends Thread {
 
         //preden zacnes minat moras bit fix da si pdejtou use in uzames transakcije iz tistih k so ble ze zbrisane.... zato moras pobrisat in dat
         //in sele potem lahko gre noter b metodo.
+
         while(true){
             //pocakaj dokler lahko minas naprej.
             if (!miningCoordinator.isMiningInterrupted()){
                 break;
             }
         }
+    Logger.log("IM STARTING TO MINE");
 
         // 1. Get the transactions that need to be added to the block
         transactionPool= TransactionPool.getInstance();
@@ -73,6 +75,8 @@ public class MinerThread extends Thread {
 
         // 3. Mine the block (finding the correct nonce)
         boolean blockMined = false;
+        long miningStartTime = System.currentTimeMillis();
+        newBlock.setMiningStartTime(miningStartTime);
 
         blockMined=newBlock.mineBlock(blockchain.getMiningDifficulty(),miningCoordinator);
 

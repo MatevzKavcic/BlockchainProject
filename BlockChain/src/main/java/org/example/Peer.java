@@ -66,14 +66,21 @@ public class Peer extends Thread {
                 Server server = new Server(portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool);
                 server.start();
             }
+
             //this part of the code will never be true, because this node is the "Server" node
             else {
                 // Create a server Thread that will listen
-                Server server= new Server(portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain, UTXOPool);
+                Server server= new Server(portNumber,messageQueue,connectedPeers,
+                        keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),
+                        blockchain, UTXOPool);
+
                 server.start();
 
-                // and then make a thread that will listen to
-                Client client = new Client(hostName,portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),portNumberOfFirstConnect,transactionManager);
+                // Make a client Thread that will connect to a server
+                Client client = new Client(hostName,portNumber,messageQueue,
+                        connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),
+                        portNumberOfFirstConnect,transactionManager);
+
                 client.start();
 
 

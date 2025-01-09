@@ -25,7 +25,7 @@ public class Blockchain {
         chain = new ArrayList<>();
         forks = new ArrayList<>();
         this.utxoPool = UTXOPool.getInstance(); // Assume UTXOPool is a singleton as well
-        miningDifficulty= 7;
+        miningDifficulty= 6;
     }
 
     // Public method to get the single instance of Blockchain
@@ -55,32 +55,41 @@ public class Blockchain {
     public synchronized void handleAddBlockForksAndSpoons(Block newBlock) {
         int newBlockIndex = newBlock.getIndex();
         int mainChainLength = chain.size();
-        TransactionPool transactionPool =  TransactionPool.getInstance();
+        TransactionPool transactionPool = TransactionPool.getInstance();
+
+        // Retrieve the mining start time from the block (assume the block contains this data)
+        long miningStartTime = newBlock.getMiningStartTime(); // Add this field to Block class
+        long currentTime = System.currentTimeMillis();
 
         if (newBlockIndex == mainChainLength + 1 &&
-                newBlock.getPreviousHash().equals(chain.get(mainChainLength - 1).getHash()))  {
+                newBlock.getPreviousHash().equals(chain.get(mainChainLength - 1).getHash())) {
             // New block extends the main chain
             addBlock(newBlock);
 
-            //delete the transactions from the poool.
-            transactionPool.removeTransactions(newBlock.getTransactions()); // removni transakcije z bloka
+            // Remove transactions from the pool
+            transactionPool.removeTransactions(newBlock.getTransactions());
 
-            Logger.log("New block added to main chain.", LogLevel.Success);
+            // Calculate and log mining time
+            long miningTime = currentTime - miningStartTime;
+            Logger.log("Block mined and added to main chain. Mining time: " + miningTime + " ms", LogLevel.Success);
         } else if (newBlockIndex == mainChainLength) {
             // Fork detected
             createFork(newBlock);
             Logger.log("Fork detected and saved.", LogLevel.Debug);
+
             resolveForks();
         } else if (isExtensionOfFork(newBlock)) {
             // New block extends one of the forks
             extendFork(newBlock);
             resolveForks(); // Check if this fork is now longer
-        }
-        else {
+        } else {
             // Block is outdated or invalid
             Logger.log("Outdated block received, ignoring.", LogLevel.Warn);
         }
     }
+
+
+
 
     private boolean isExtensionOfFork(Block newBlock) {
         for (List<Block> fork : forks) {

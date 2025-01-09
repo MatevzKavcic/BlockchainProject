@@ -181,6 +181,9 @@ public class MessagingService extends Thread {
 
         Logger.log("is mining interupted ? -> "+miningCoordinator.isMiningInterrupted(),LogLevel.Info);
 
+
+
+
         blockchain = Blockchain.getInstance();
 
         Block recievedBlock = gson.fromJson(messageObject.getBody(),Block.class);

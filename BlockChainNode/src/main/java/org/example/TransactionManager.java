@@ -145,14 +145,33 @@ public class TransactionManager extends Thread{
 
 
     public void sendTransactionPool(PublicKey sendToPublicKey) {
-        String transPoolString = gson.toJson(transactionPool);
 
-        Message m = new Message(MessageType.RESPONSETRANSPOOL,transPoolString,publicKeyToString(publicKey));
-        String mString = gson.toJson(m);
+        int retries = 5; // Number of retries before giving up
+        int delay = 2000; // Delay between retries (in milliseconds)
 
-        WriteMeThread thread = (WriteMeThread) connectedPeers.get(sendToPublicKey).getThread();
+        while (retries > 0) {
+            if (connectedPeers.get(sendToPublicKey) != null) {
+                // Found the peer, send the message
+                String transPoolString = gson.toJson(transactionPool);
+                Message m = new Message(MessageType.RESPONSETRANSPOOL, transPoolString, publicKeyToString(publicKey));
+                String mString = gson.toJson(m);
 
-        thread.sendMessage( mString);
+                WriteMeThread thread = (WriteMeThread) connectedPeers.get(sendToPublicKey).getThread();
+                thread.sendMessage(mString);
+                return; // Successfully sent the message
+            }
+
+            // Peer is not yet connected, wait and retry
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                Logger.log("Thread interrupted while waiting for connectedPeers", LogLevel.Warn);
+                Thread.currentThread().interrupt();
+                break; // Stop retrying if the thread is interrupted
+            }
+
+            retries--;
+        }
     }
 
     public void updateTransactionPool(String transactionPoolString) {

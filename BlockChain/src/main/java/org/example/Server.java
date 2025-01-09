@@ -1,6 +1,7 @@
 package org.example;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import util.LogLevel;
 import util.Logger;
 
@@ -68,52 +69,61 @@ public class Server extends Thread{
     // what it does is a bit more complicated. It initiates the handshake protocol  and exchanges the public keys with the client and then creates two threads.
     //one thread will only listen to the socket and put messages that it recieves to a message queue
     // one thrad will be created for messaging. it will have a method send that will send a something to that socket output. and i will have an array of those sockets that will handle the sockets? i guess ?
-    private void handShakeProtocol(Socket clientSocket) throws Exception {
-        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+    private synchronized void handShakeProtocol(Socket clientSocket) throws Exception {
+        try{
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-        Message handshakeMessage = new Message(MessageType.HANDSHAKE, "", publicKeyToString(publicKey));
-        Gson gson = new Gson();
-        String jsonMessage = gson.toJson(handshakeMessage);
+            Message handshakeMessage = new Message(MessageType.HANDSHAKE, "", publicKeyToString(publicKey));
+            Gson gson = new Gson();
+            String jsonMessage = gson.toJson(handshakeMessage);
 
-        Logger.log("Someon connected to me. Sending HANSHAKE message to client: ",LogLevel.Info);
-        out.println(jsonMessage); // Send handshake to client
+            Logger.log("Someon connected to me. Sending HANSHAKE message to client: ",LogLevel.Info);
+            out.println(jsonMessage); // Send handshake to client
 
-        // Read the response handshake message... public key and in the body there is a port number of the server port.
-        String jsonResponseMessage = in.readLine(); // Wait for client's response
-        Logger.log("Received response handshake message: " + jsonResponseMessage,LogLevel.Success);
+            // Read the response handshake message... public key and in the body there is a port number of the server port.
+            String jsonResponseMessage = in.readLine(); // Wait for client's response
+            Logger.log("Received response handshake message: " + jsonResponseMessage,LogLevel.Success);
 
-        // Deserialize the response and process the client's public key
-        // and the body of the message is the portnumber of the server
-        Message responseMessage = gson.fromJson(jsonResponseMessage, Message.class);
-        PublicKey clientPublicKey = stringToPublicKey(responseMessage.getPublicKey());
+            // Deserialize the response and process the client's public key
+            // and the body of the message is the portnumber of the server
+            Message responseMessage = gson.fromJson(jsonResponseMessage, Message.class);
+            PublicKey clientPublicKey = stringToPublicKey(responseMessage.getPublicKey());
 
-        int peersPortNum = Integer.parseInt(responseMessage.getBody()); // port serverja od peera ki se je povezal
+            int peersPortNum = Integer.parseInt(responseMessage.getBody()); // port serverja od peera ki se je povezal
 
-        ListenToMeThread listenThread = new ListenToMeThread(clientSocket, in, messageQueue,stringToPublicKey(responseMessage.getPublicKey()),connectedPeers);
-        new Thread(listenThread).start(); // Run the listening thread
+            ListenToMeThread listenThread = new ListenToMeThread(clientSocket, in, messageQueue,stringToPublicKey(responseMessage.getPublicKey()),connectedPeers);
+            new Thread(listenThread).start(); // Run the listening thread
 
-        WriteMeThread writeMeThread = new WriteMeThread(out);
-        new Thread(writeMeThread).start(); // Run the listening thread
+            WriteMeThread writeMeThread = new WriteMeThread(out);
+            new Thread(writeMeThread).start(); // Run the listening thread
 
-        PeerInfo peerInfo = new PeerInfo(clientSocket,writeMeThread,peersPortNum);
+            PeerInfo peerInfo = new PeerInfo(clientSocket,writeMeThread,peersPortNum);
 
-        // ko pride na server moras vedt al se je prvo povezu nate ali ze na drugega.
-        if (responseMessage.getHeader()==MessageType.PEERLISTRETURN){
-            connectedPeers.put(clientPublicKey, peerInfo); // save it in your storage
+            // ko pride na server moras vedt al se je prvo povezu nate ali ze na drugega.
+            if (responseMessage.getHeader()==MessageType.PEERLISTRETURN){
+                connectedPeers.put(clientPublicKey, peerInfo); // save it in your storage
+            }
+            else {
+                sendListToPeer(gson,writeMeThread);
+                connectedPeers.put(clientPublicKey, peerInfo);
+                notifyUpdates();
+            }
+
+            Logger.log("i have " + connectedPeers.size() + "peers connected to me. " , LogLevel.Status);
+
+
+        } catch (
+                JsonSyntaxException e) {
+            Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
+            Logger.log("Malformed JSON: " , LogLevel.Error);
+            // Optionally, send a request to the sender to resend the message
         }
-        else {
-            sendListToPeer(gson,writeMeThread);
-            connectedPeers.put(clientPublicKey, peerInfo);
-            notifyUpdates();
-        }
-
-        Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
-
-        for (PublicKey publicKey1 : connectedPeers.keySet()) {
+        /*for (PublicKey publicKey1 : connectedPeers.keySet()) {
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
+         */
 
     }
 

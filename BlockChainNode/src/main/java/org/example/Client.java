@@ -1,6 +1,7 @@
 package org.example;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import util.LogLevel;
 import util.Logger;
 
@@ -13,6 +14,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -77,7 +79,7 @@ public class Client extends Thread{
         }
     }
 
-    private void handleHandshakeFromServer(Socket socket) throws Exception {
+    private synchronized void handleHandshakeFromServer(Socket socket) throws Exception {
 
 
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -90,52 +92,67 @@ public class Client extends Thread{
         String jsonMessage = in.readLine(); // Read the JSON message
 
         Gson gson = new Gson();
-        Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
-        PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
+        // Message handshakeMessage = gson.fromJson(jsonMessage, Message.class); ////
+        // PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
 
-        if (handshakeMessage.getHeader()==MessageType.TRANSACTION||handshakeMessage.getHeader()==MessageType.BLOCK){
-            messageQueue.put(jsonMessage);
-            return;
-        }
+        try {
+            Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
+            PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
+            // Proceed with the handshake logic
 
-        Logger.log("Received handshake message from server  " + handshakeMessage.getHeader() + " || body ->" + handshakeMessage.getBody() + "\n || public key -> " + handshakeMessage.getPublicKey());
+            if (handshakeMessage.getHeader()==MessageType.TRANSACTION||handshakeMessage.getHeader()==MessageType.BLOCK){
+                messageQueue.put(jsonMessage);
+                return;
+            }
+
+            //Logger.log("Received handshake message from server  " + handshakeMessage.getHeader() + " || body ->" + handshakeMessage.getBody() + "\n || public key -> " + handshakeMessage.getPublicKey());
 
 
-        //send a new message to the server to let him know your public key and your in the body of the message(port number);
+            //send a new message to the server to let him know your public key and your in the body of the message(port number);
 
-        Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURN, ""+portNumber, publicKeyToString(publicKey));
-        String jsonResponse = gson.toJson(responseMessage);
-        Logger.log("Sending response handshake to server: " , LogLevel.Status);
+            Message responseMessage = new Message(MessageType.HANDSHAKEKEYRETURN, ""+portNumber, publicKeyToString(publicKey));
+            String jsonResponse = gson.toJson(responseMessage);
+            //Logger.log("Sending response handshake to server: " , LogLevel.Status);
 
-        out.println(jsonResponse);
+            out.println(jsonResponse);
 
-        ListenToMeThread listenThread = new ListenToMeThread(socket, in, messageQueue,serverPublicKey,connectedPeers);
-        new Thread(listenThread).start(); // Run the listening thread
+            ListenToMeThread listenThread = new ListenToMeThread(socket, in, messageQueue,serverPublicKey,connectedPeers);
+            new Thread(listenThread).start(); // Run the listening thread
 
-        WriteMeThread writeMeThread = new WriteMeThread(out);
-        new Thread(writeMeThread).start(); // Run the listening thread
+            WriteMeThread writeMeThread = new WriteMeThread(out);
+            new Thread(writeMeThread).start(); // Run the listening thread
 
-        PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,connectToPort);
+            PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,connectToPort);
 
-        // Store the client's information in connectedPeers
-        //it stores the publicKey and the peers socket and the writemeThread;
-        synchronized (SharedResources.LOCK) {
-            connectedPeers.put(serverPublicKey, peerInfo);
-            notifyUpdates();
-        }
+            // Store the client's information in connectedPeers
+            //it stores the publicKey and the peers socket and the writemeThread;
+            synchronized (SharedResources.LOCK) {
+                connectedPeers.put(serverPublicKey, peerInfo);
+                notifyUpdates();
+            }
 
-        Logger.log("i have " + connectedPeers.size() + " peers connected to me. those peers are on ports" , LogLevel.Status);
-
-        for (PublicKey publicKey1 : connectedPeers.keySet()) {
+            Logger.log("i have " + connectedPeers.size() + " peers connected to me. " , LogLevel.Status);
+            logAllPeerBalances();
+       /* for (PublicKey publicKey1 : connectedPeers.keySet()) {
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
+
+        */
+
+        } catch (JsonSyntaxException e) {
+            Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
+            Logger.log("Malformed JSON: " + jsonMessage, LogLevel.Error);
+            // Optionally, send a request to the sender to resend the message
+        }
+
+
 
     }
 
     // Method to handle messages from the server
 
-    private void handleHandshakeFromServerIfSpecial(Socket socket) throws Exception {
+    private synchronized void handleHandshakeFromServerIfSpecial(Socket socket) throws Exception {
 
 
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -147,40 +164,59 @@ public class Client extends Thread{
 
         String jsonMessage = in.readLine(); // Read the JSON message... blocking method in caka na response.
         Gson gson = new Gson();
-        Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
-        PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
-        Logger.log("Received handshake message from server  " + handshakeMessage.getHeader() + " || body ->" + handshakeMessage.getBody() + "\n || public key -> " + handshakeMessage.getPublicKey());
+
+        try {
+            Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
+            PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
+            // Proceed with the handshake logic
 
 
-        //send a new message to the server to let him know your public key and your in the body of the message(port number);
-
-        Message responseMessage = new Message(MessageType.PEERLISTRETURN, ""+portNumber, publicKeyToString(publicKey));
-        String jsonResponse = gson.toJson(responseMessage);
-        Logger.log("Sending PEERLISTRETURN to server of a new Client so he knows about me and my pulic key.: " , LogLevel.Status);
-
-        out.println(jsonResponse);
+            Logger.log("Received handshake message from server  " + handshakeMessage.getHeader() + " || body ->" + handshakeMessage.getBody() + "\n || public key -> " + handshakeMessage.getPublicKey());
 
 
-        ListenToMeThread listenThread = new ListenToMeThread(socket, in, messageQueue,serverPublicKey,connectedPeers);
+            //send a new message to the server to let him know your public key and your in the body of the message(port number);
 
-        new Thread(listenThread).start(); // Run the listening thread
+            Message responseMessage = new Message(MessageType.PEERLISTRETURN, ""+portNumber, publicKeyToString(publicKey));
+            String jsonResponse = gson.toJson(responseMessage);
+            Logger.log("Sending PEERLISTRETURN to server of a new Client so he knows about me and my pulic key.: " , LogLevel.Status);
 
-        WriteMeThread writeMeThread = new WriteMeThread(out);
-        new Thread(writeMeThread).start(); // Run the listening thread
-
-        PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,connectToPort);
-
-        // Store the client's information in connectedPeers
-        //it stores the publicKey and the peers socket and the writemeThread;
-        connectedPeers.put(serverPublicKey, peerInfo);
+            out.println(jsonResponse);
 
 
-        Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
+            ListenToMeThread listenThread = new ListenToMeThread(socket, in, messageQueue,serverPublicKey,connectedPeers);
 
+            new Thread(listenThread).start(); // Run the listening thread
+
+            WriteMeThread writeMeThread = new WriteMeThread(out);
+            new Thread(writeMeThread).start(); // Run the listening thread
+
+            PeerInfo peerInfo = new PeerInfo(socket,writeMeThread,connectToPort);
+
+            // Store the client's information in connectedPeers
+            //it stores the publicKey and the peers socket and the writemeThread;
+            connectedPeers.put(serverPublicKey, peerInfo);
+
+
+            Logger.log("i have " + connectedPeers.size() + "peers connected to me. " , LogLevel.Status);
+            logAllPeerBalances();
+        /*
         for (PublicKey publicKey1 : connectedPeers.keySet()) {
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
+         */
+
+
+
+        } catch (JsonSyntaxException e) {
+            Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
+            Logger.log("Malformed JSON: " + jsonMessage, LogLevel.Error);
+            // Optionally, send a request to the sender to resend the message
+        }
+
+
+        // Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);
+        // PublicKey serverPublicKey = stringToPublicKey(handshakeMessage.getPublicKey());
 
     }
 
@@ -202,5 +238,37 @@ public class Client extends Thread{
             SharedResources.LOCK.notifyAll(); // Notify all waiting threads
             Logger.log("Updating threads");
         }
+    }
+    public void logAllPeerBalances() {
+        UTXOPool utxoPool = UTXOPool.getInstance();
+        StringBuilder balanceReport = new StringBuilder();
+
+        balanceReport.append(String.format("\n%-30s | %-10s\n", "Peer", "Balance"));
+        balanceReport.append("-".repeat(42)).append("\n");
+
+        // Add your own balance
+        String myPublicKeyString = publicKeyToString(publicKey); // Assume `publicKey` is your node's public key
+        String myName = generateNameFromPublicKey(myPublicKeyString);
+        int myBalance = utxoPool.getMyTotalFunds(myPublicKeyString);
+
+        balanceReport.append(String.format("%-30s | %-10d\n", myName + " (You)", myBalance));
+
+        // Add connected peers' balances
+        for (PublicKey peer : connectedPeers.keySet()) {
+            String peerName = generateNameFromPublicKey(publicKeyToString(peer));
+            String peerPublicKey = publicKeyToString(peer);
+            int peerBalance = utxoPool.getMyTotalFunds(peerPublicKey);
+
+            balanceReport.append(String.format("%-30s | %-10d\n", peerName, peerBalance));
+        }
+
+        Logger.log(balanceReport.toString(), LogLevel.Info);
+    }
+
+
+    public static String generateNameFromPublicKey(String publicKey) {
+        // Generate a UUID based on the public key hash
+        UUID uuid = UUID.nameUUIDFromBytes(publicKey.getBytes());
+        return uuid.toString().split("-")[0]; // Use the first part for brevity
     }
 }

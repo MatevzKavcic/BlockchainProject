@@ -36,8 +36,8 @@ public class RandomTransactionMakerThread extends Thread{
 
         while (true) {
             try {
-                // Sleep for 20 seconds
-                Thread.sleep(10000);
+                // Sleep for 70 seconds
+                Thread.sleep(70000);
 
                 // Create a random transaction
                 Transaction transaction = createRandomTransaction();

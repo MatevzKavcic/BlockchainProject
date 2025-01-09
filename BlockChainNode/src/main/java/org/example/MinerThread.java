@@ -73,6 +73,9 @@ public class MinerThread extends Thread {
 
         boolean blockMined = false;
 
+        long miningStartTime = System.currentTimeMillis();
+        newBlock.setMiningStartTime(miningStartTime);
+
         blockMined=newBlock.mineBlock(blockchain.getMiningDifficulty(),miningCoordinator);
 
         if (blockMined==false){
