@@ -1,6 +1,8 @@
 package org.example;
 
 import com.google.gson.internal.bind.util.ISO8601Utils;
+import util.LogLevel;
+import util.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,15 +18,21 @@ public class Main {
 
     public static int portNumber =  6000 + (int)(Math.random() * 2001);
 
+    public static String portNumberDockerString = System.getenv("NODE_PORT");
+
+    public static int portNumberDocker = Integer.parseInt(portNumberDockerString);
+
     public static int portNumberOfFirstConnect= 6000;
-    public static String hostName = "127.0.0.1";
+    public static String hostName = "mainnode";
     public static boolean firstNode = false;
 
 
     // this is the primary node or the root node so it will act as a server!
     public static void main(String[] args) {
-        Peer peer = new Peer(portNumber,hostName,firstNode,portNumberOfFirstConnect);
+        Peer peer = new Peer(portNumberDocker,hostName,firstNode,portNumberOfFirstConnect);
+        //Peer peer = new Peer(portNumber,hostName,firstNode,portNumberOfFirstConnect);
         peer.start();
+        Logger.log(":"+portNumberDocker+":la", LogLevel.Success);
 
     }
 

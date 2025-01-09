@@ -1,4 +1,7 @@
 package org.example;
+import util.LogLevel;
+import util.Logger;
+
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
@@ -34,6 +37,7 @@ public class Transaction {
         for (TransactionInput input : inputs) {
             TransactionOutput UTXO = utxoPool.getUTXOPool().get(input.getTransactionOutputId());
             if (UTXO == null || !UTXO.isMine(sender)) {
+                Logger.log("Input is invalid or not owned by the sender", LogLevel.Error);
                 return false; // Input is invalid or not owned by the sender
             }
             input.setUTXO(UTXO); // Attach the UTXO to the input

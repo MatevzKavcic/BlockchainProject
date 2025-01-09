@@ -46,33 +46,41 @@ public class Peer extends Thread {
 
             UTXOPool UTXOPool = new UTXOPool();
 
-            Blockchain blockchain = new Blockchain(UTXOPool);
+            Blockchain blockchain = Blockchain.getInstance();
 
             blockchain.addGenesisBlock(keyGenerator.getPublicKey());
-            TransactionPool transactionPool = new TransactionPool();
+            TransactionPool transactionPool = TransactionPool.getInstance();
+            MiningCoordinator miningCoordinator = new MiningCoordinator();
 
-            TransactionManager transactionManager = new TransactionManager(UTXOPool,connectedPeers, keyGenerator.getPublicKey(),blockchain,transactionPool);
+            TransactionManager transactionManager = new TransactionManager(connectedPeers, keyGenerator.getPublicKey(),blockchain);
             transactionManager.start();
 
-            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool,transactionManager);
-            messagingServiceThread.start();
-
-            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(), UTXOPool,connectedPeers,transactionPool);
+            MinerThread minerThread = new MinerThread(keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(), connectedPeers,miningCoordinator);
             minerThread.start();
+
+            MessagingService messagingServiceThread = new MessagingService(messageQueue,connectedPeers,hostName,portNumber, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool,transactionManager,miningCoordinator);
+            messagingServiceThread.start();
 
             if (firstNode) {
                 // Create a Server Thread !
                 Server server = new Server(portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain,UTXOPool);
                 server.start();
             }
+
             //this part of the code will never be true, because this node is the "Server" node
             else {
                 // Create a server Thread that will listen
-                Server server= new Server(portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),blockchain, UTXOPool);
+                Server server= new Server(portNumber,messageQueue,connectedPeers,
+                        keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),
+                        blockchain, UTXOPool);
+
                 server.start();
 
-                // and then make a thread that will listen to
-                Client client = new Client(hostName,portNumber,messageQueue,connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),portNumberOfFirstConnect,transactionManager);
+                // Make a client Thread that will connect to a server
+                Client client = new Client(hostName,portNumber,messageQueue,
+                        connectedPeers, keyGenerator.getPublicKey(), keyGenerator.getPrivateKey(),
+                        portNumberOfFirstConnect,transactionManager);
+
                 client.start();
 
 

@@ -1,6 +1,7 @@
 package org.example;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import util.LogLevel;
 import util.Logger;
 
@@ -16,6 +17,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,12 +41,13 @@ public class Server extends Thread{
         this.privateKey = privateKey;
         this.blockchain = blockchain;
         this.UTXOPool = UTXOPool;
+        this.setName("SERVER STRING");
     }
 
     @Override
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
-            System.out.println("Server listening on port " + portNumber);
+            Logger.log("Server listening on port " + portNumber);
             while (true) {
                 Socket clientSocket = serverSocket.accept();
 
@@ -67,7 +70,8 @@ public class Server extends Thread{
     // what it does is a bit more complicated. It initiates the handshake protocol  and exchanges the public keys with the client and then creates two threads.
     //one thread will only listen to the socket and put messages that it recieves to a message queue
     // one thrad will be created for messaging. it will have a method send that will send a something to that socket output. and i will have an array of those sockets that will handle the sockets? i guess ?
-    private void handShakeProtocol(Socket clientSocket) throws Exception {
+    private synchronized void handShakeProtocol(Socket clientSocket) throws Exception {
+        try{
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
@@ -89,7 +93,7 @@ public class Server extends Thread{
 
         int peersPortNum = Integer.parseInt(responseMessage.getBody()); // port serverja od peera ki se je povezal
 
-        ListenToMeThread listenThread = new ListenToMeThread(clientSocket, in, messageQueue);
+        ListenToMeThread listenThread = new ListenToMeThread(clientSocket, in, messageQueue,stringToPublicKey(responseMessage.getPublicKey()),connectedPeers);
         new Thread(listenThread).start(); // Run the listening thread
 
         WriteMeThread writeMeThread = new WriteMeThread(out);
@@ -104,48 +108,32 @@ public class Server extends Thread{
         else {
             sendListToPeer(gson,writeMeThread);
             connectedPeers.put(clientPublicKey, peerInfo);
+            notifyUpdates();
         }
 
-        Logger.log("i have " + connectedPeers.size() + "peers connected to me. those peers are on ports" , LogLevel.Status);
+        Logger.log("i have " + connectedPeers.size() + "peers connected to me. " , LogLevel.Status);
+        logAllPeerBalances();
 
+
+    } catch (
+    JsonSyntaxException e) {
+        Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
+        Logger.log("Malformed JSON: " , LogLevel.Error);
+        // Optionally, send a request to the sender to resend the message
+    }
+
+
+        /*
         for (PublicKey publicKey1 : connectedPeers.keySet()) {
             PeerInfo pInfo = connectedPeers.get(publicKey1);
             Logger.log("Server Port: " + pInfo.getServerPort() + "and their public key is " + publicKey1 , LogLevel.Success);
         }
-
-
-        //TO IMPLEMENT:
-        //ko pride now peeer v network mu damo balance 100.0 "kao 100 eurou"
-
-
-
-        //TO IMPLEMENT:
-        // ko pride bo potreboval tudi blockchain od soseda in bo dau request. to mora dat client
-
-        //IMPORTANT !!!!
-        //ONLY THIS SERVER CLASS HAS THIS METHOD... WHEN YOU CONNECT TO THIS SERVER YOU GET
-        //THE BLOCKCHAIN.. LATER YOU CAN REQUEST IT BUT THIS IS FOR TESTING
-        // to bo cene implementiral class ki bo pac rabu blockchain so Miner al neki .
-        //sendBlockchain(out,gson);
-        // in UTXO pool bo rabu.
-        //sendUTXOPool(out,gson);
-    }
-
-  /*  private void sendUTXOPool(PrintWriter out, Gson gson) {
-        Message utxoPool = new Message(MessageType.UTXOPOOLINITIALIZATION,gson.toJson(UTXOPool),publicKeyToString(publicKey));
-        String utxoPoolString = gson.toJson(utxoPool);
-        out.println(utxoPoolString);
+        */
     }
 
 
-    private void sendBlockchain(PrintWriter out,Gson gson) {
-        Message blockchainRequest = new Message(MessageType.BLOCKCHAINITIALIZE,gson.toJson(blockchain),publicKeyToString(publicKey));
-        String blockchainRequestString = gson.toJson(blockchainRequest);
-        out.println(blockchainRequestString);
-    }
 
 
-   */
     // metoda ki poslje array portov na katere se mora peer povezat. to naredi kinda se mi zdi
     private void sendListToPeer(Gson gson,WriteMeThread writeMeThread) {
 
@@ -170,6 +158,44 @@ public class Server extends Thread{
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(spec);
     }
+    public synchronized void notifyUpdates() {
+        synchronized (SharedResources.LOCK) {
+            SharedResources.LOCK.notifyAll(); // Notify all waiting threads
+            Logger.log("Updating threads");
+        }
 
+    }
+    public void logAllPeerBalances() {
+        UTXOPool utxoPool = UTXOPool.getInstance();
+        StringBuilder balanceReport = new StringBuilder();
+
+        balanceReport.append(String.format("\n%-30s | %-10s\n", "Peer", "Balance"));
+        balanceReport.append("-".repeat(42)).append("\n");
+
+        // Add your own balance
+        String myPublicKeyString = publicKeyToString(publicKey); // Assume `publicKey` is your node's public key
+        String myName = generateNameFromPublicKey(myPublicKeyString);
+        int myBalance = utxoPool.getMyTotalFunds(myPublicKeyString);
+
+        balanceReport.append(String.format("%-30s | %-10d\n", myName + " (You)", myBalance));
+
+        // Add connected peers' balances
+        for (PublicKey peer : connectedPeers.keySet()) {
+            String peerName = generateNameFromPublicKey(publicKeyToString(peer));
+            String peerPublicKey = publicKeyToString(peer);
+            int peerBalance = utxoPool.getMyTotalFunds(peerPublicKey);
+
+            balanceReport.append(String.format("%-30s | %-10d\n", peerName, peerBalance));
+        }
+
+        Logger.log(balanceReport.toString(), LogLevel.Info);
+    }
+
+
+    public static String generateNameFromPublicKey(String publicKey) {
+        // Generate a UUID based on the public key hash
+        UUID uuid = UUID.nameUUIDFromBytes(publicKey.getBytes());
+        return uuid.toString().split("-")[0]; // Use the first part for brevity
+    }
 
 }

@@ -17,7 +17,6 @@ public class ListenToMeThread implements Runnable {
     private Socket socket;
     private BufferedReader in;
     private final BlockingQueue<String> messageQueue;
-
     private final PublicKey peerPublicKey;
     private ConcurrentHashMap<PublicKey, PeerInfo> connectedPeers; // Peers in the network
 
@@ -33,6 +32,7 @@ public class ListenToMeThread implements Runnable {
     }
 
 
+
     @Override
     public void run() {
 
@@ -42,7 +42,7 @@ public class ListenToMeThread implements Runnable {
                 messageQueue.put(message); // Add message to queue
             }
         } catch (IOException e) {
-            Logger.log("Peer disconnected: " + generateNameFromPublicKey(publicKeyToString(peerPublicKey)), LogLevel.Error);
+            Logger.log("Peer disconnected: " + peerPublicKey, LogLevel.Error);
             handleDisconnection(peerPublicKey);
         } catch (InterruptedException e) {
             Logger.log("Listening thread interrupted for peer: " + peerPublicKey, LogLevel.Debug);
@@ -87,5 +87,6 @@ public class ListenToMeThread implements Runnable {
     public static String publicKeyToString(PublicKey publicKey) {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
+
 
 }
