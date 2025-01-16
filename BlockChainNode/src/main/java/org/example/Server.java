@@ -14,10 +14,7 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -115,12 +112,28 @@ public class Server extends Thread{
         logAllPeerBalances();
 
 
-    } catch (
-    JsonSyntaxException e) {
-        Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
-        Logger.log("Malformed JSON: " , LogLevel.Error);
-        // Optionally, send a request to the sender to resend the message
-    }
+    } catch (Exception e) {
+            Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
+            Logger.log("failed inside CLIENT");
+            Logger.log("sending my status to all ", LogLevel.Error);
+
+            for (Map.Entry<PublicKey, PeerInfo> entry : connectedPeers.entrySet()) {
+                PublicKey publicKeyOf = entry.getKey();
+                PeerInfo peerInfo = entry.getValue();
+
+                WriteMeThread thread = (WriteMeThread) peerInfo.getThread();
+                String pkString = publicKeyToString(publicKey);
+                int blockchainLenght = Blockchain.getInstance().getChain().size();
+                String blockchainLenghtString = Integer.toString(blockchainLenght);
+                Message m = new Message(MessageType.BLOCKERROR,blockchainLenghtString, pkString);
+                Gson newGson = new Gson();
+                String mString = newGson.toJson(m);
+                thread.sendMessage( mString);
+                Logger.log("Sent a message :"+ m.getHeader() + " --- " +m.getBody()+" --- to -->" + generateNameFromPublicKey(publicKeyToString(publicKeyOf)));
+            }
+
+
+        }
 
 
         /*

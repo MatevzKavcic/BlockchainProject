@@ -16,7 +16,7 @@ public class Blockchain {
     private List<List<Block>> forks; // Competing forks
     private UTXOPool utxoPool;
 
-
+    private long startTime;
 
     private int miningDifficulty;
 
@@ -26,6 +26,7 @@ public class Blockchain {
         forks = new ArrayList<>();
         this.utxoPool = UTXOPool.getInstance(); // Assume UTXOPool is a singleton as well
         miningDifficulty= 6;
+        this.startTime = System.currentTimeMillis();
     }
 
     // Public method to get the single instance of Blockchain
@@ -72,7 +73,37 @@ public class Blockchain {
             // Calculate and log mining time
             long miningTime = currentTime - miningStartTime;
             Logger.log("Block mined and added to main chain. Mining time: " + miningTime + " ms", LogLevel.Success);
+
+            //Analisys tactics.
+
+            if (chain.size() == 100 ) {
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                Logger.log("Blockchain reached 100 blocks! Time taken: " + (elapsedTime / 1000) + " seconds.", LogLevel.Info);
+            }
+
+            if (chain.size() == 200) {
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                Logger.log("Blockchain reached 200 blocks! Time taken: " + (elapsedTime / 1000) + " seconds.", LogLevel.Info);
+            }
+
+            if (chain.size() == 300) {
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                Logger.log("Blockchain reached 300 blocks! Time taken: " + (elapsedTime / 1000) + " seconds.", LogLevel.Info);
+            }
+
+            if (chain.size() == 400) {
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                Logger.log("Blockchain reached 400 blocks! Time taken: " + (elapsedTime / 1000) + " seconds.", LogLevel.Info);
+            }
+
+
         } else if (newBlockIndex == mainChainLength) {
+            Logger.log("GOT A FORK PROBABLY THE MISSING SEREIALIZATION SHIT, ignoring.", LogLevel.Debug);
+
+            if (forks.stream().anyMatch(fork -> fork.get(newBlockIndex).getHash().equals(newBlock.getHash()))) {
+                Logger.log("Duplicate fork block received, ignoring.", LogLevel.Debug);
+                return; // Ignore duplicate fork blocks
+            }
             // Fork detected
             createFork(newBlock);
             Logger.log("Fork detected and saved.", LogLevel.Debug);

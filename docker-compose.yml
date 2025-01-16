@@ -168,41 +168,41 @@ services:
     networks:
       - blockchain-network
   
-  # normalnode17:
-  #   build:
-  #     context: ./BlockChainNode
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     - NODE_PORT=6017
-  #   networks:
-  #     - blockchain-network
+  normalnode17:
+    build:
+      context: ./BlockChainNode
+      dockerfile: Dockerfile
+    environment:
+      - NODE_PORT=6017
+    networks:
+      - blockchain-network
 
-  # normalnode18:
-  #   build:
-  #     context: ./BlockChainNode
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     - NODE_PORT=6018
-  #   networks:
-  #     - blockchain-network
+  normalnode18:
+    build:
+      context: ./BlockChainNode
+      dockerfile: Dockerfile
+    environment:
+      - NODE_PORT=6018
+    networks:
+      - blockchain-network
   
-  # normalnode19:
-  #   build:
-  #     context: ./BlockChainNode
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     - NODE_PORT=6019
-  #   networks:
-  #     - blockchain-network
+  normalnode19:
+    build:
+      context: ./BlockChainNode
+      dockerfile: Dockerfile
+    environment:
+      - NODE_PORT=6019
+    networks:
+      - blockchain-network
       
-  # normalnode20:
-  #   build:
-  #     context: ./BlockChainNode
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     - NODE_PORT=6020
-  #   networks:
-  #     - blockchain-network
+  normalnode20:
+    build:
+      context: ./BlockChainNode
+      dockerfile: Dockerfile
+    environment:
+      - NODE_PORT=6020
+    networks:
+      - blockchain-network
   
 
 networks:
