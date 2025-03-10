@@ -25,7 +25,7 @@ public class Blockchain {
         chain = new ArrayList<>();
         forks = new ArrayList<>();
         this.utxoPool = UTXOPool.getInstance(); // Assume UTXOPool is a singleton as well
-        miningDifficulty= 6;
+        miningDifficulty= 8;
         this.startTime = System.currentTimeMillis();
     }
 
@@ -57,11 +57,11 @@ public class Blockchain {
         int newBlockIndex = newBlock.getIndex();
         int mainChainLength = chain.size();
         TransactionPool transactionPool = TransactionPool.getInstance();
-
+/*
         // Retrieve the mining start time from the block (assume the block contains this data)
         long miningStartTime = newBlock.getMiningStartTime(); // Add this field to Block class
         long currentTime = System.currentTimeMillis();
-
+*/
         if (newBlockIndex == mainChainLength + 1 &&
                 newBlock.getPreviousHash().equals(chain.get(mainChainLength - 1).getHash())) {
             // New block extends the main chain
@@ -69,10 +69,10 @@ public class Blockchain {
 
             // Remove transactions from the pool
             transactionPool.removeTransactions(newBlock.getTransactions());
-
+/*
             // Calculate and log mining time
             long miningTime = currentTime - miningStartTime;
-            Logger.log("Block mined and added to main chain. Mining time: " + miningTime + " ms", LogLevel.Success);
+            Logger.log("..... mining difficultly  is :" +Blockchain.getInstance().miningDifficulty+".....Block mined and added to main chain. Mining time: " + miningTime + " ms" , LogLevel.Success);
 
             //Analisys tactics.
 
@@ -96,7 +96,7 @@ public class Blockchain {
                 Logger.log("Blockchain reached 400 blocks! Time taken: " + (elapsedTime / 1000) + " seconds.", LogLevel.Info);
             }
 
-
+*/
         } else if (newBlockIndex == mainChainLength) {
             Logger.log("GOT A FORK PROBABLY THE MISSING SEREIALIZATION SHIT, ignoring.", LogLevel.Debug);
 

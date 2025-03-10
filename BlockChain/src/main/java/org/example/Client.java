@@ -1,6 +1,7 @@
 package org.example;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import util.LogLevel;
 import util.Logger;
 
@@ -222,7 +223,7 @@ public class Client extends Thread{
 
 
 
-        } catch (Exception e) {
+        } catch (JsonParseException e) {
             Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
             Logger.log("failed inside CLIENT");
             Logger.log("sending my status to all ", LogLevel.Error);
