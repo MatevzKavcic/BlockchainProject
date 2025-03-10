@@ -1,5 +1,19 @@
 #!/bin/bash
 
+
+pwd
+
+cd Blockchain 
+
+mvn clean package
+
+cd ..\\BlockchainNode
+
+mvn clean package 
+
+cd ..
+
+
 COMPOSE_FILE="docker-compose.yml"
 SERVICES=("mainnode" "normalnode1" "normalnode2" "normalnode3" "normalnode4") # "normalnode5"
  #"normalnode6" "normalnode7" "normalnode8" "normalnode9" "normalnode10")
