@@ -1,9 +1,11 @@
 #!/bin/bash
 
 COMPOSE_FILE="docker-compose.yml"
-SERVICES=("mainnode" "normalnode1" "normalnode2" "normalnode3" "normalnode4" "normalnode5" "normalnode6" "normalnode7" "normalnode8" "normalnode9" "normalnode10"
- "normalnode11" "normalnode12" "normalnode13" "normalnode14" "normalnode15" "normalnode16" )
-#"normalnode17" "normalnode18" "normalnode19" "normalnode20")
+SERVICES=("mainnode" "normalnode1" "normalnode2" "normalnode3" "normalnode4") # "normalnode5"
+ #"normalnode6" "normalnode7" "normalnode8" "normalnode9" "normalnode10")
+  # "normalnode11" "normalnode12" "normalnode13" "normalnode14" "normalnode15")
+  #  "normalnode16" 
+# "normalnode17" "normalnode18" "normalnode19" "normalnode20")
 DELAY=5  # Time in seconds between starting each service
 
 for SERVICE in "${SERVICES[@]}"; do

@@ -14,6 +14,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -140,10 +141,26 @@ public class Client extends Thread{
 
         */
 
-        } catch (JsonSyntaxException e) {
+        } catch (Exception e) {
             Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
-            Logger.log("Malformed JSON: " + jsonMessage, LogLevel.Error);
-            // Optionally, send a request to the sender to resend the message
+            Logger.log("failed inside CLIENT");
+            Logger.log("sending my status to all ", LogLevel.Error);
+
+            for (Map.Entry<PublicKey, PeerInfo> entry : connectedPeers.entrySet()) {
+                PublicKey publicKeyOf = entry.getKey();
+                PeerInfo peerInfo = entry.getValue();
+
+                WriteMeThread thread = (WriteMeThread) peerInfo.getThread();
+                String pkString = publicKeyToString(publicKey);
+                int blockchainLenght = Blockchain.getInstance().getChain().size();
+                String blockchainLenghtString = Integer.toString(blockchainLenght);
+                Message m = new Message(MessageType.BLOCKERROR,blockchainLenghtString, pkString);
+                String mString = gson.toJson(m);
+                thread.sendMessage( mString);
+                Logger.log("Sent a message :"+ m.getHeader() + " --- " +m.getBody()+" --- to -->" + generateNameFromPublicKey(publicKeyToString(publicKeyOf)));
+            }
+
+
         }
 
 
@@ -208,11 +225,28 @@ public class Client extends Thread{
 
 
 
-        } catch (JsonSyntaxException e) {
+        } catch (Exception e) {
             Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
-            Logger.log("Malformed JSON: " + jsonMessage, LogLevel.Error);
-            // Optionally, send a request to the sender to resend the message
+            Logger.log("failed inside CLIENT");
+            Logger.log("sending my status to all ", LogLevel.Error);
+
+            for (Map.Entry<PublicKey, PeerInfo> entry : connectedPeers.entrySet()) {
+                PublicKey publicKeyOf = entry.getKey();
+                PeerInfo peerInfo = entry.getValue();
+
+                WriteMeThread thread = (WriteMeThread) peerInfo.getThread();
+                String pkString = publicKeyToString(publicKey);
+                int blockchainLenght = Blockchain.getInstance().getChain().size();
+                String blockchainLenghtString = Integer.toString(blockchainLenght);
+                Message m = new Message(MessageType.BLOCKERROR,blockchainLenghtString, pkString);
+                String mString = gson.toJson(m);
+                thread.sendMessage( mString);
+                Logger.log("Sent a message :"+ m.getHeader() + " --- " +m.getBody()+" --- to -->" + generateNameFromPublicKey(publicKeyToString(publicKeyOf)));
+            }
+
+
         }
+
 
 
         // Message handshakeMessage = gson.fromJson(jsonMessage, Message.class);

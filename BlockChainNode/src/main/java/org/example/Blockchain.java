@@ -73,7 +73,16 @@ public class Blockchain {
             // Calculate and log mining time
             long miningTime = currentTime - miningStartTime;
             Logger.log("Block mined and added to main chain. Mining time: " + miningTime + " ms", LogLevel.Success);
+
+
+
         } else if (newBlockIndex == mainChainLength) {
+            Logger.log("GOT A FORK PROBABLY THE MISSING SEREIALIZATION SHIT, ignoring.", LogLevel.Debug);
+
+            if (forks.stream().anyMatch(fork -> fork.get(newBlockIndex).getHash().equals(newBlock.getHash()))) {
+                Logger.log("Duplicate fork block received, ignoring.", LogLevel.Debug);
+                return; // Ignore duplicate fork blocks
+            }
             // Fork detected
             createFork(newBlock);
             Logger.log("Fork detected and saved.", LogLevel.Debug);

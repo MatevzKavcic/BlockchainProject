@@ -61,15 +61,20 @@ public class MessagingService extends Thread {
 
     @Override
     public void run() {
-        try {
 
-            // bussy waiting for someone to put something in the queue. when that happens it proceses it.
-            while (true) {
+        // bussy waiting for someone to put something in the queue. when that happens it proceses it.
+        while (true) {
+            try{
+
                 // Wait for a message to process
                 String message = messageQueue.take();
                 Type type = new TypeToken<ArrayList<Integer>>() {}.getType();
 
-                Message messageObject = gson.fromJson(message,Message.class);
+                Message messageObject;
+
+
+                messageObject = gson.fromJson(message,Message.class);
+
                 //thre is an option that block comes before the blockchain and you need to handle that  (This will never happen here because this is the Genesisblock createor node so he must always have )
                 if (Blockchain.getInstance()==null && messageObject.getHeader()== MessageType.BLOCK){
                     Logger.log("BLOCCKERCOCKER ga ni tle.",LogLevel.Error);
@@ -165,13 +170,113 @@ public class MessagingService extends Thread {
                     case BLOCK -> {
                         handleNewBlock(senderName,messageObject);
                     }
+                    case BLOCKERROR -> {
+                        int a = Blockchain.getInstance().getChain().size();
+                        handleBlockchainLengthMessage(messageObject);
+                    }
+                    case MISSING_BLOCKS -> {
+                        handleMissingBlocksMessage(messageObject);
+                    }
                 }
+            } catch (Exception e) {
+                Logger.log("Failed to parse JSON message: " + e.getMessage(), LogLevel.Error);
+                Logger.log("failed inside MESSAGING SERVICE");
+                Logger.log("sending my status to all ", LogLevel.Error);
+
+                for (Map.Entry<PublicKey, PeerInfo> entry : connectedPeers.entrySet()) {
+                    PublicKey publicKeyOf = entry.getKey();
+                    PeerInfo peerInfo = entry.getValue();
+
+                    WriteMeThread thread = (WriteMeThread) peerInfo.getThread();
+                    String pkString = publicKeyToString(publicKey);
+                    int blockchainLenght = Blockchain.getInstance().getChain().size();
+                    String blockchainLenghtString = Integer.toString(blockchainLenght);
+
+                    Message m = new Message(MessageType.BLOCKERROR,
+                            blockchainLenghtString,
+                            pkString);
+
+                    String mString = gson.toJson(m);
+                    thread.sendMessage( mString);
+                    Logger.log("Sent a message :"+ m.getHeader() + " --- " +m.getBody()+" --- to -->" + generateNameFromPublicKey(publicKeyToString(publicKeyOf)));
+                }
+
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            e.printStackTrace();
+
+        }
+    }
+
+    private void handleMissingBlocksMessage(Message message) {
+        try {
+            // Deserialize the received blocks
+            Type blockListType = new TypeToken<List<Block>>() {}.getType();
+            List<Block> receivedBlocks = gson.fromJson(message.getBody(), blockListType);
+
+            // Add the received blocks to the blockchain
+            Blockchain blockchain = Blockchain.getInstance();
+            for (Block block : receivedBlocks) {
+                blockchain.handleAddBlockForksAndSpoons(block);
+            }
+
+            Logger.log("Successfully added " + receivedBlocks.size() + " blocks to the blockchain.", LogLevel.Info);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            Logger.log("Failed to process missing blocks message: " + e.getMessage(), LogLevel.Error);
+        }
+    }
+
+    public void handleBlockchainLengthMessage(Message message) {
+        try {
+            // Extract the blockchain length from the message body
+            int peerBlockchainLength = Integer.parseInt(message.getBody());
+
+            // Get the current blockchain instance
+            Blockchain blockchain = Blockchain.getInstance();
+            int localBlockchainLength = blockchain.getChain().size();
+
+            PublicKey senderKey = stringToPublicKey(message.getPublicKey()); // od message public key je recipient k njemu posljes
+
+            // Check if the peer is missing blocks
+            if (localBlockchainLength > peerBlockchainLength) {
+                // Send the missing blocks
+                sendMissingBlocks(senderKey, peerBlockchainLength);
+            } else {
+                Logger.log("Peer's blockchain is up to date or ahead. No blocks to send.", LogLevel.Info);
+            }
+        } catch (Exception e) {
+            Logger.log("Failed to handle blockchain length message: " + e.getMessage(), LogLevel.Error);
+        }
+    }
+    private void sendMissingBlocks(PublicKey recipientKey, int startIndex) {
+        Blockchain blockchain = Blockchain.getInstance();
+
+        // Check if the start index is valid
+        if (startIndex < 0 || startIndex >= blockchain.getChain().size()) {
+            Logger.log("Invalid start index for sending missing blocks.", LogLevel.Error);
+            return;
+        }
+
+        // Collect the missing blocks
+        List<Block> missingBlocks = blockchain.getChain().subList(startIndex, blockchain.getChain().size());
+
+        // Serialize the blocks into JSON format
+        String serializedBlocks = gson.toJson(missingBlocks);
+
+        // Create a new message with the blocks
+        Message blockMessage = new Message(
+                MessageType.MISSING_BLOCKS,
+                serializedBlocks,
+                publicKeyToString(publicKey)
+        );
+
+        // Send the message to the recipient
+        PeerInfo recipient = connectedPeers.get(recipientKey);
+        if (recipient != null) {
+
+            WriteMeThread thread = (WriteMeThread) recipient.getThread();
+            thread.sendMessage(gson.toJson(blockMessage));
+            Logger.log("Sent " + missingBlocks.size() + " missing blocks to peer.", LogLevel.Info);
+        } else {
+            Logger.log("Recipient not found in connected peers.", LogLevel.Error);
         }
     }
 

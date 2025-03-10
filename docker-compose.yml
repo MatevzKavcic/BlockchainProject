@@ -53,120 +53,120 @@ services:
     networks:
       - blockchain-network
    
-  normalnode5:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
-      - NODE_PORT=6005
-    networks:
-      - blockchain-network
+  # normalnode5:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+  #     - NODE_PORT=6005
+  #   networks:
+  #     - blockchain-network
 
-  normalnode6:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
-      - NODE_PORT=6006
-    networks:
-      - blockchain-network
+  # normalnode6:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+  #     - NODE_PORT=6006
+  #   networks:
+  #     - blockchain-network
    
-  normalnode7:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
-      - NODE_PORT=6007
-    networks:
-      - blockchain-network
+  # normalnode7:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+  #     - NODE_PORT=6007
+  #   networks:
+  #     - blockchain-network
 
-  normalnode8:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
-      - NODE_PORT=6008
-    networks:
-      - blockchain-network
+  # normalnode8:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+  #     - NODE_PORT=6008
+  #   networks:
+  #     - blockchain-network
   
-  normalnode9:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
-      - NODE_PORT=6009
-    networks:
-      - blockchain-network
+  # normalnode9:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+  #     - NODE_PORT=6009
+  #   networks:
+  #     - blockchain-network
       
-  normalnode10:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
-      - NODE_PORT=6010
-    networks:
-      - blockchain-network
+  # normalnode10:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+  #     - NODE_PORT=6010
+  #   networks:
+  #     - blockchain-network
   
-  normalnode11:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
-      - NODE_PORT=6011
-    networks:
-      - blockchain-network
+  # normalnode11:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - JAVA_OPTS=-DportNumberOfFirstConnect=6000 -DfirstNode=false -DhostName=mainnode
+  #     - NODE_PORT=6011
+  #   networks:
+  #     - blockchain-network
    
-  normalnode12:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - NODE_PORT=6012
-    networks:
-      - blockchain-network
+  # normalnode12:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - NODE_PORT=6012
+  #   networks:
+  #     - blockchain-network
     
-  normalnode13:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - NODE_PORT=6013
-    networks:
-      - blockchain-network
+  # normalnode13:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - NODE_PORT=6013
+  #   networks:
+  #     - blockchain-network
 
-  normalnode14:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - NODE_PORT=6014
-    networks:
-      - blockchain-network
+  # normalnode14:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - NODE_PORT=6014
+  #   networks:
+  #     - blockchain-network
   
-  normalnode15:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - NODE_PORT=6015
-    networks:
-      - blockchain-network
+  # normalnode15:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - NODE_PORT=6015
+  #   networks:
+  #     - blockchain-network
 
-  normalnode16:
-    build:
-      context: ./BlockChainNode
-      dockerfile: Dockerfile
-    environment:
-      - NODE_PORT=6016
-    networks:
-      - blockchain-network
+  # normalnode16:
+  #   build:
+  #     context: ./BlockChainNode
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - NODE_PORT=6016
+  #   networks:
+  #     - blockchain-network
   
   # normalnode17:
   #   build:
