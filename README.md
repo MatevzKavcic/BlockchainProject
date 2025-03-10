@@ -11,9 +11,8 @@ How to run the project:
 
 ## Prerequisites
 Ensure you have the following installed before proceeding:
-- Docker (if applicable)
-- Required dependencies (list any necessary dependencies)
-- Bash (for running shell scripts)
+- Docker
+- Bash
 
 
 ### Installation & Setup
@@ -22,7 +21,7 @@ Follow these steps to start the project:
 1. Make sure Docker is running.  
 2. Run the start script:  
 
-   ```sh
+   (make sure you are in the correct folder when excecuting this command)
    ./start.sh
 
 If you get a permission error, first run:
